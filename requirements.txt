@@ -11,3 +11,4 @@ gunicorn==21.2.0
 requests==2.31.0
 validators==0.22.0
 python-dateutil==2.8.2
+psycopg2-binary==2.9.10

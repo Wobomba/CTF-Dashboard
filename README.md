@@ -47,6 +47,21 @@ A comprehensive cybersecurity training platform by RENU-CERT, inspired by TryHac
 - Node.js 16+
 - npm or yarn
 - SQLite (default) or PostgreSQL
+- **OR Docker & Docker Compose** (recommended for easy setup)
+
+### 🐳 Docker Quick Start (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/Wobomba/CTF-Dashboard.git
+cd CTF-Dashboard
+
+# Run with Docker (includes database)
+./docker-build.sh
+
+# Access the application
+# Frontend: http://localhost
+# API: http://localhost/api
+```
 
 ### Installation
 
