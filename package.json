@@ -1,0 +1,38 @@
+{
+  "name": "renu-cert-cyberlab",
+  "version": "1.0.0",
+  "description": "RENU-CERT CyberLab - A comprehensive cybersecurity training platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start-backend": "cd backend && python app.py",
+    "install-backend": "cd backend && pip install -r ../requirements.txt"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@monaco-editor/react": "^4.6.0",
+    "axios": "^1.5.0",
+    "framer-motion": "^10.16.4",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "^0.279.0",
+    "monaco-editor": "^0.44.0",
+    "prismjs": "^1.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-markdown": "^8.0.7",
+    "react-router-dom": "^6.15.0",
+    "recharts": "^3.2.1",
+    "tailwindcss": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.22",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.4",
+    "autoprefixer": "^10.4.15",
+    "postcss": "^8.4.29",
+    "vite": "^4.4.9"
+  }
+}
