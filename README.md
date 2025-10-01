@@ -280,28 +280,556 @@ The platform uses SQLAlchemy ORM with the following main models:
 - Database performance monitoring
 - User activity tracking
 
-## 🚀 Deployment
+## 🚀 Production Deployment
 
-### Production Deployment
-1. **Set up environment variables**
-2. **Configure PostgreSQL database**
-3. **Set up Redis for caching**
-4. **Use Gunicorn for Flask app**
-5. **Configure Nginx reverse proxy**
-6. **Set up SSL certificates**
+### Prerequisites for Production
+- **Server**: Ubuntu 20.04+ or CentOS 8+ (2GB RAM minimum, 4GB+ recommended)
+- **Domain**: Configured DNS pointing to your server
+- **SSL Certificate**: Let's Encrypt or commercial certificate
+- **Database**: PostgreSQL 12+ (recommended) or MySQL 8+
+- **Web Server**: Nginx or Apache
+- **Process Manager**: PM2 (Node.js) and Gunicorn (Python)
 
-### Docker Deployment
+### 🐧 Ubuntu Server Deployment
+
+#### 1. Server Setup
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install required packages
+sudo apt install -y python3 python3-pip python3-venv nodejs npm nginx postgresql postgresql-contrib git
+
+# Install PM2 globally
+sudo npm install -g pm2
+
+# Create application user
+sudo adduser --system --group --home /opt/cyberlab cyberlab
+sudo usermod -aG sudo cyberlab
 ```
 
-### Cloud Deployment
-The platform can be deployed on:
-- **Heroku**: Easy deployment with Postgres addon
-- **AWS**: EC2 instances with RDS database
-- **DigitalOcean**: Droplets with managed database
-- **Google Cloud**: App Engine with Cloud SQL
+#### 2. Clone and Setup Application
+```bash
+# Switch to application user
+sudo su - cyberlab
+
+# Clone repository
+git clone https://github.com/Wobomba/CTF-Dashboard.git /opt/cyberlab/app
+cd /opt/cyberlab/app
+
+# Set up Python environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install gunicorn
+
+# Install Node.js dependencies
+npm install
+npm run build
+```
+
+#### 3. Database Configuration
+```bash
+# Switch to postgres user
+sudo -u postgres psql
+
+# Create database and user
+CREATE DATABASE cyberlab_prod;
+CREATE USER cyberlab_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE cyberlab_prod TO cyberlab_user;
+\q
+
+# Initialize database
+cd /opt/cyberlab/app/backend
+source ../venv/bin/activate
+python init_database.py
+```
+
+#### 4. Environment Configuration
+```bash
+# Create production environment file
+sudo nano /opt/cyberlab/app/.env
+```
+
+Add the following content:
+```bash
+# Flask Configuration
+FLASK_ENV=production
+SECRET_KEY=your-super-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-key-here
+
+# Database Configuration
+DATABASE_URL=postgresql://cyberlab_user:your_secure_password@localhost/cyberlab_prod
+
+# Frontend URL
+FRONTEND_URL=https://yourdomain.com
+
+# Security
+CORS_ORIGINS=https://yourdomain.com
+```
+
+#### 5. Gunicorn Configuration
+```bash
+# Create Gunicorn configuration
+sudo nano /opt/cyberlab/app/gunicorn.conf.py
+```
+
+Add the following content:
+```python
+bind = "127.0.0.1:5000"
+workers = 4
+worker_class = "sync"
+worker_connections = 1000
+timeout = 30
+keepalive = 2
+max_requests = 1000
+max_requests_jitter = 100
+preload_app = True
+```
+
+#### 6. PM2 Configuration
+```bash
+# Create PM2 ecosystem file
+sudo nano /opt/cyberlab/app/ecosystem.config.js
+```
+
+Add the following content:
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'cyberlab-backend',
+      cwd: '/opt/cyberlab/app/backend',
+      script: 'gunicorn',
+      args: '--config ../gunicorn.conf.py app:app',
+      interpreter: '/opt/cyberlab/app/venv/bin/python',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        FLASK_ENV: 'production'
+      },
+      error_file: '/opt/cyberlab/logs/backend-error.log',
+      out_file: '/opt/cyberlab/logs/backend-out.log',
+      log_file: '/opt/cyberlab/logs/backend-combined.log',
+      time: true
+    },
+    {
+      name: 'cyberlab-frontend',
+      cwd: '/opt/cyberlab/app',
+      script: 'npm',
+      args: 'run preview',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      },
+      error_file: '/opt/cyberlab/logs/frontend-error.log',
+      out_file: '/opt/cyberlab/logs/frontend-out.log',
+      log_file: '/opt/cyberlab/logs/frontend-combined.log',
+      time: true
+    }
+  ]
+};
+```
+
+#### 7. Nginx Configuration
+```bash
+# Create Nginx configuration
+sudo nano /etc/nginx/sites-available/cyberlab
+```
+
+Add the following content:
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.com www.yourdomain.com;
+
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Frontend (React app)
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Static files
+    location /static/ {
+        alias /opt/cyberlab/app/dist/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # File uploads
+    client_max_body_size 50M;
+}
+```
+
+#### 8. SSL Certificate Setup
+```bash
+# Install Certbot
+sudo apt install -y certbot python3-certbot-nginx
+
+# Obtain SSL certificate
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+# Test auto-renewal
+sudo certbot renew --dry-run
+```
+
+#### 9. System Service Setup
+```bash
+# Create systemd service for PM2
+sudo nano /etc/systemd/system/cyberlab.service
+```
+
+Add the following content:
+```ini
+[Unit]
+Description=CyberLab Application
+After=network.target
+
+[Service]
+Type=forking
+User=cyberlab
+Group=cyberlab
+WorkingDirectory=/opt/cyberlab/app
+ExecStart=/usr/bin/pm2 start ecosystem.config.js
+ExecReload=/usr/bin/pm2 reload ecosystem.config.js
+ExecStop=/usr/bin/pm2 stop ecosystem.config.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### 10. Final Setup and Start
+```bash
+# Enable and start services
+sudo systemctl enable cyberlab
+sudo systemctl start cyberlab
+
+# Enable Nginx
+sudo systemctl enable nginx
+sudo systemctl restart nginx
+
+# Check status
+sudo systemctl status cyberlab
+sudo systemctl status nginx
+
+# View logs
+pm2 logs
+```
+
+### 🐳 Docker Deployment
+
+#### 1. Create Dockerfile
+```dockerfile
+# Dockerfile
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+
+FROM python:3.9-slim
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code
+COPY backend/ ./backend/
+
+# Copy frontend build
+COPY --from=frontend-builder /app/dist ./dist
+
+# Create non-root user
+RUN useradd -m -u 1000 cyberlab
+USER cyberlab
+
+EXPOSE 5000
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "backend.app:app"]
+```
+
+#### 2. Create docker-compose.yml
+```yaml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "80:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://cyberlab:password@db:5432/cyberlab
+    depends_on:
+      - db
+    volumes:
+      - ./uploads:/app/uploads
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=cyberlab
+      - POSTGRES_USER=cyberlab
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+```
+
+#### 3. Deploy with Docker
+```bash
+# Build and start
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Scale if needed
+docker-compose up -d --scale app=3
+```
+
+### ☁️ Cloud Platform Deployment
+
+#### Heroku Deployment
+```bash
+# Install Heroku CLI
+curl https://cli-assets.heroku.com/install.sh | sh
+
+# Login to Heroku
+heroku login
+
+# Create app
+heroku create your-cyberlab-app
+
+# Add PostgreSQL addon
+heroku addons:create heroku-postgresql:hobby-dev
+
+# Set environment variables
+heroku config:set FLASK_ENV=production
+heroku config:set SECRET_KEY=your-secret-key
+heroku config:set JWT_SECRET_KEY=your-jwt-secret
+
+# Deploy
+git push heroku main
+
+# Run database migrations
+heroku run python backend/init_database.py
+```
+
+#### AWS EC2 Deployment
+```bash
+# Launch EC2 instance (t3.medium recommended)
+# Connect via SSH
+ssh -i your-key.pem ubuntu@your-ec2-ip
+
+# Follow Ubuntu Server Deployment steps above
+# Configure Security Groups:
+# - Port 22 (SSH)
+# - Port 80 (HTTP)
+# - Port 443 (HTTPS)
+```
+
+#### DigitalOcean App Platform
+```yaml
+# .do/app.yaml
+name: cyberlab
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: Wobomba/CTF-Dashboard
+    branch: main
+  run_command: gunicorn --bind 0.0.0.0:8080 backend.app:app
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: FLASK_ENV
+    value: production
+  - key: DATABASE_URL
+    value: ${db.DATABASE_URL}
+databases:
+- name: db
+  engine: PG
+  version: "13"
+```
+
+### 🔧 Production Optimization
+
+#### Performance Tuning
+```bash
+# Install Redis for caching
+sudo apt install redis-server
+
+# Configure PostgreSQL
+sudo nano /etc/postgresql/13/main/postgresql.conf
+# Add:
+shared_buffers = 256MB
+effective_cache_size = 1GB
+maintenance_work_mem = 64MB
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+default_statistics_target = 100
+
+# Restart PostgreSQL
+sudo systemctl restart postgresql
+```
+
+#### Monitoring Setup
+```bash
+# Install monitoring tools
+sudo apt install htop iotop nethogs
+
+# Set up log rotation
+sudo nano /etc/logrotate.d/cyberlab
+```
+
+Add:
+```
+/opt/cyberlab/logs/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 644 cyberlab cyberlab
+}
+```
+
+#### Backup Strategy
+```bash
+# Create backup script
+sudo nano /opt/cyberlab/backup.sh
+```
+
+Add:
+```bash
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/opt/cyberlab/backups"
+mkdir -p $BACKUP_DIR
+
+# Database backup
+pg_dump cyberlab_prod > $BACKUP_DIR/db_$DATE.sql
+
+# Application backup
+tar -czf $BACKUP_DIR/app_$DATE.tar.gz /opt/cyberlab/app
+
+# Clean old backups (keep 30 days)
+find $BACKUP_DIR -name "*.sql" -mtime +30 -delete
+find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete
+```
+
+```bash
+# Make executable and add to crontab
+chmod +x /opt/cyberlab/backup.sh
+crontab -e
+# Add: 0 2 * * * /opt/cyberlab/backup.sh
+```
+
+### 🚨 Troubleshooting
+
+#### Common Issues
+1. **Port already in use**: `sudo lsof -i :5000` and kill process
+2. **Permission denied**: Check file ownership with `ls -la`
+3. **Database connection failed**: Verify PostgreSQL is running and credentials
+4. **SSL certificate issues**: Check certificate validity and Nginx configuration
+
+#### Log Locations
+- **Application logs**: `/opt/cyberlab/logs/`
+- **Nginx logs**: `/var/log/nginx/`
+- **System logs**: `/var/log/syslog`
+- **PM2 logs**: `pm2 logs`
+
+#### Health Checks
+```bash
+# Check application status
+curl -f http://localhost:5000/api/health || echo "Backend down"
+
+# Check database
+sudo -u postgres psql -c "SELECT 1;" cyberlab_prod
+
+# Check disk space
+df -h
+
+# Check memory usage
+free -h
+```
+
+### 🔒 Security Checklist
+
+- [ ] Change default passwords
+- [ ] Enable firewall (UFW)
+- [ ] Configure fail2ban
+- [ ] Set up SSL/TLS
+- [ ] Regular security updates
+- [ ] Database backups
+- [ ] Monitor logs
+- [ ] Use environment variables for secrets
+- [ ] Disable unnecessary services
+- [ ] Configure proper file permissions
 
 ## 🤝 Contributing
 
