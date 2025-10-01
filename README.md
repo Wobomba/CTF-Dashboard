@@ -1,6 +1,6 @@
 # RENU-CERT CyberLab 🛡️
 
-A comprehensive cybersecurity training platform by RENU-CERT, inspired by Blue Team Labs Online. Train your defensive security skills through hands-on challenges, investigations, and real-world scenarios.
+A comprehensive cybersecurity training platform by RENU-CERT, inspired by TryHackMe and Blue Team Labs Online. Train your defensive security skills through hands-on challenges, investigations, and real-world scenarios with interactive line graphs and competitive leaderboards.
 
 ![Platform Preview](https://via.placeholder.com/800x400/1e293b/3b82f6?text=RENU-CERT+CyberLab)
 
@@ -13,10 +13,12 @@ A comprehensive cybersecurity training platform by RENU-CERT, inspired by Blue T
 - **File Analysis**: Malware analysis, forensics, and threat intelligence
 
 ### 🏆 **Competitive Learning**
-- Global leaderboard system
+- Global leaderboard system with real-time updates
+- Challenge-specific leaderboards with TryHackMe-style line graphs
 - User progress tracking and achievements
-- Points-based scoring system
+- Points-based scoring system with speed bonuses
 - Difficulty-based challenge progression
+- Interactive progression visualization showing points accumulation
 
 ### 📚 **Comprehensive Domains**
 - **Incident Response**: Learn to respond to and investigate security incidents
@@ -31,8 +33,12 @@ A comprehensive cybersecurity training platform by RENU-CERT, inspired by Blue T
 ### 🎨 **Modern Interface**
 - Dark theme optimized for security professionals
 - Responsive design for all devices
-- Real-time progress tracking
-- Interactive challenge environments
+- Real-time progress tracking with interactive charts
+- Multi-question challenge system with individual submission
+- Hint system for each question
+- File upload support for challenge resources
+- Series-based challenge organization
+- RENU branding and custom logo integration
 
 ## 🚀 Quick Start
 
@@ -81,11 +87,11 @@ A comprehensive cybersecurity training platform by RENU-CERT, inspired by Blue T
    ```
 
 5. **Access the application**
-   - Frontend: http://localhost:3000
+   - Frontend: http://localhost:5173
    - Backend API: http://localhost:5000
 
 ### Demo Account
-- **Email**: admin@cyberlab.local
+- **Email**: admin@renu-cert.local
 - **Password**: admin123
 
 ## 🏗️ Architecture
