@@ -89,19 +89,6 @@ def revoked_token_callback(jwt_header, jwt_payload):
 # Create tables
 with app.app_context():
     db.create_all()
-    
-    # Create default admin user if it doesn't exist
-    admin = User.query.filter_by(email='admin@cyberlab.local').first()
-    if not admin:
-        admin_user = User(
-            username='admin',
-            email='admin@cyberlab.local',
-            password_hash=generate_password_hash('admin123'),
-            is_admin=True
-        )
-        db.session.add(admin_user)
-        db.session.commit()
-        print("Default admin user created: admin@cyberlab.local / admin123")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

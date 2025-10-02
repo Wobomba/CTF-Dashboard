@@ -97,6 +97,8 @@ export const progressAPI = {
 
 // Admin API
 export const adminAPI = {
+  checkSetup: () => api.get('/admin/setup/check'),
+  setupAdmin: (adminData) => api.post('/admin/setup', adminData),
   getDashboard: () => api.get('/admin/dashboard'),
   createCategory: (categoryData) => api.post('/admin/categories', categoryData),
   createChallenge: (challengeData) => api.post('/admin/challenges', challengeData),

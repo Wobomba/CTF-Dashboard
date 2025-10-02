@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 import sys
@@ -23,6 +23,108 @@ def require_admin():
         wrapper.__name__ = f.__name__
         return wrapper
     return decorator
+
+@admin_bp.route('/setup/check', methods=['GET'])
+def check_admin_setup():
+    """Check if admin account exists"""
+    try:
+        # Security: Check for suspicious user agents
+        user_agent = request.headers.get('User-Agent', '').lower()
+        suspicious_patterns = [
+            'gobuster', 'dirb', 'dirbuster', 'wfuzz', 'burp', 'nikto', 'nmap',
+            'sqlmap', 'w3af', 'zap', 'scanner', 'crawler', 'bot', 'spider',
+            'python-requests', 'curl', 'wget', 'postman'
+        ]
+        
+        is_suspicious = any(pattern in user_agent for pattern in suspicious_patterns)
+        if is_suspicious:
+            # Return a generic error to avoid revealing the endpoint
+            return jsonify({'error': 'Access denied'}), 403
+        
+        admin_exists = User.query.filter_by(is_admin=True).first() is not None
+        return jsonify({
+            'admin_exists': admin_exists,
+            'setup_required': not admin_exists
+        }), 200
+    except Exception as e:
+        return jsonify({'error': 'Failed to check admin setup', 'details': str(e)}), 500
+
+@admin_bp.route('/setup', methods=['POST'])
+def setup_admin():
+    """Create the first admin account"""
+    try:
+        # Security: Check for suspicious user agents
+        user_agent = request.headers.get('User-Agent', '').lower()
+        suspicious_patterns = [
+            'gobuster', 'dirb', 'dirbuster', 'wfuzz', 'burp', 'nikto', 'nmap',
+            'sqlmap', 'w3af', 'zap', 'scanner', 'crawler', 'bot', 'spider',
+            'python-requests', 'curl', 'wget', 'postman'
+        ]
+        
+        is_suspicious = any(pattern in user_agent for pattern in suspicious_patterns)
+        if is_suspicious:
+            # Return a generic error to avoid revealing the endpoint
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Check if any admin already exists
+        if User.query.filter_by(is_admin=True).first():
+            return jsonify({'error': 'Admin account already exists'}), 400
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['username', 'email', 'password', 'first_name', 'last_name']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field} is required'}), 400
+        
+        # Validate email format
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, data['email']):
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        # Validate password strength
+        password = data['password']
+        if len(password) < 8:
+            return jsonify({'error': 'Password must be at least 8 characters long'}), 400
+        
+        # Check if email is already taken
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already registered'}), 400
+        
+        # Check if username is already taken
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({'error': 'Username already taken'}), 400
+        
+        # Create admin user
+        admin_user = User(
+            username=data['username'],
+            email=data['email'],
+            password_hash=generate_password_hash(password),
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            bio=data.get('bio', ''),
+            is_admin=True,
+            is_active=True,
+            is_verified=True  # Auto-verify admin account
+        )
+        
+        db.session.add(admin_user)
+        db.session.commit()
+        
+        # Create access token for immediate login
+        access_token = create_access_token(identity=admin_user.id)
+        
+        return jsonify({
+            'message': 'Admin account created successfully',
+            'user': admin_user.to_dict(include_sensitive=True),
+            'access_token': access_token
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to create admin account', 'details': str(e)}), 500
 
 @admin_bp.route('/dashboard', methods=['GET'])
 @jwt_required()

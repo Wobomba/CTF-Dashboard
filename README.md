@@ -105,9 +105,8 @@ cd CTF-Dashboard
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:5000
 
-### Demo Account
-- **Email**: admin@renu-cert.local
-- **Password**: admin123
+### First-Time Setup
+When you first access the application, you'll be redirected to create an administrator account. This ensures secure initial setup without hardcoded credentials.
 
 ## 🏗️ Architecture
 

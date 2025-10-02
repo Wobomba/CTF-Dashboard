@@ -154,14 +154,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Demo Account Info */}
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-sm text-blue-300 mb-2 font-medium">Demo Account:</p>
-            <p className="text-xs text-blue-200">
-              Email: admin@cyberlab.local<br />
-              Password: admin123
-            </p>
-          </div>
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">

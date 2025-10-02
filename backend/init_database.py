@@ -337,7 +337,20 @@ Write a complete YARA rule with appropriate metadata.''',
         }
     ]
     
-    admin_user = User.query.filter_by(email='admin@cyberlab.local').first()
+    # Get any admin user or create a temporary one for initialization
+    admin_user = User.query.filter_by(is_admin=True).first()
+    if not admin_user:
+        # Create a temporary admin user for initialization purposes
+        admin_user = User(
+            username='temp_admin',
+            email='temp@admin.local',
+            password_hash=generate_password_hash('temp_password'),
+            is_admin=True,
+            is_active=True,
+            is_verified=True
+        )
+        db.session.add(admin_user)
+        db.session.flush()  # Flush to get the ID
     
     for challenge_data in challenges:
         # Get category

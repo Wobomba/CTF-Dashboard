@@ -12,6 +12,8 @@ import ChallengeDetail from './pages/ChallengeDetail'
 import Leaderboard from './pages/Leaderboard'
 import Profile from './pages/Profile'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminSetup from './pages/AdminSetup'
+import AdminSetupCheck from './components/AdminSetupCheck'
 import LoadingSpinner from './components/LoadingSpinner'
 
 // Protected Route Component
@@ -97,6 +99,7 @@ const AppContent = () => {
           } />
           
           {/* Admin Routes */}
+          <Route path="/admin/setup" element={<AdminSetup />} />
           <Route path="/admin" element={
             <ProtectedRoute adminOnly>
               <AdminDashboard />
@@ -124,7 +127,9 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <AdminSetupCheck>
+        <AppContent />
+      </AdminSetupCheck>
     </AuthProvider>
   )
 }
