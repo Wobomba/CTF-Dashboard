@@ -121,7 +121,12 @@ const AdminDashboard = () => {
     )
   }
 
-  const stats = dashboardData || {
+  const stats = dashboardData ? {
+    total_users: dashboardData.users?.total || 0,
+    total_challenges: dashboardData.challenges?.total || 0,
+    active_submissions: dashboardData.submissions?.total || 0,
+    avg_completion_rate: dashboardData.submissions?.success_rate || 0
+  } : {
     total_users: 0,
     total_challenges: 0,
     active_submissions: 0,

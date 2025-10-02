@@ -138,7 +138,7 @@ const Home = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold text-white mb-4">
-              Why Choose CyberLab Academy?
+              Why Choose Us?
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
               Our platform provides comprehensive cybersecurity training through practical, hands-on learning experiences.

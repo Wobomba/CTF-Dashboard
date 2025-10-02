@@ -53,23 +53,42 @@ const ChallengeLeaderboard = ({ challengeId }) => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
+      const step = data.step
       
       return (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-medium">{data.username}</p>
-          <p className="text-gray-300 text-sm">Submission #{data.step}</p>
-          {data.submitted_at && (
-            <p className="text-gray-400 text-xs">
-              {new Date(data.submitted_at).toLocaleDateString()} at{' '}
-              {new Date(data.submitted_at).toLocaleTimeString()}
-            </p>
-          )}
-          <p className={`text-sm ${data.is_correct ? 'text-green-400' : 'text-red-400'}`}>
-            {data.is_correct ? `+${data.points} points` : 'Incorrect attempt'}
-          </p>
-          <p className="text-yellow-400 text-sm font-medium">
-            Total: {data.cumulative_points}/{maxPoints} points
-          </p>
+        <div className="bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-lg max-w-xs">
+          <p className="text-white font-medium mb-2">Step {step}</p>
+          <div className="space-y-2">
+            {payload.map((entry, index) => {
+              const userId = entry.dataKey.replace('user_', '').replace(/_points$/, '')
+              const username = data[`user_${userId}_username`] || 'Unknown'
+              const isCorrect = data[`user_${userId}_is_correct`]
+              const submittedAt = data[`user_${userId}_submitted_at`]
+              const points = entry.value || 0
+              
+              return (
+                <div key={userId} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span className="text-white text-sm">{username}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-sm ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                      {points}/{maxPoints}
+                    </span>
+                    {submittedAt && (
+                      <p className="text-gray-400 text-xs">
+                        {new Date(submittedAt).toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )
     }
@@ -89,17 +108,50 @@ const ChallengeLeaderboard = ({ challengeId }) => {
     userNames[entry.user_id] = entry.username
   })
 
-  // Create simplified chart data - one data point per user submission
-  const chartData = timeline.map((entry, index) => ({
-    ...entry,
-    x: index + 1, // Sequential numbering for X-axis
-    y: entry.cumulative_points,
-    step: entry.submission_number
-  }))
+  // Group timeline data by user and create separate lines
+  const userData = {}
+  timeline.forEach(entry => {
+    if (!userData[entry.user_id]) {
+      userData[entry.user_id] = []
+    }
+    userData[entry.user_id].push({
+      ...entry,
+      step: entry.submission_number,
+      points: entry.cumulative_points
+    })
+  })
+
+  // Create chart data with all user lines
+  const chartData = []
+  const maxSteps = Math.max(...Object.values(userData).map(userSubmissions => userSubmissions.length), 1)
+  
+  // Create data points for each step, including all users
+  for (let step = 1; step <= maxSteps; step++) {
+    const stepData = { step }
+    
+    // Add data for each user at this step
+    Object.keys(userData).forEach(userId => {
+      const userSubmissions = userData[userId]
+      const submissionAtStep = userSubmissions.find(sub => sub.step === step)
+      
+      if (submissionAtStep) {
+        stepData[`user_${userId}`] = submissionAtStep.points
+        stepData[`user_${userId}_username`] = submissionAtStep.username
+        stepData[`user_${userId}_is_correct`] = submissionAtStep.is_correct
+        stepData[`user_${userId}_submitted_at`] = submissionAtStep.submitted_at
+      } else {
+        // If user didn't submit at this step, use their last known points
+        const lastSubmission = userSubmissions.filter(sub => sub.step < step).pop()
+        stepData[`user_${userId}`] = lastSubmission ? lastSubmission.points : 0
+      }
+    })
+    
+    chartData.push(stepData)
+  }
 
   // If no data, create empty chart
   if (chartData.length === 0) {
-    chartData.push({ x: 0, y: 0, step: 0 })
+    chartData.push({ step: 0 })
   }
 
   if (loading) {
@@ -190,12 +242,12 @@ const ChallengeLeaderboard = ({ challengeId }) => {
                   <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
-                      dataKey="x" 
+                      dataKey="step" 
                       stroke="#9CA3AF"
                       fontSize={12}
                       axisLine={false}
                       tickLine={false}
-                      label={{ value: 'Submission Order', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
+                      label={{ value: 'Submission Steps', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
                       type="number"
                       scale="linear"
                       domain={['dataMin', 'dataMax']}
@@ -210,27 +262,48 @@ const ChallengeLeaderboard = ({ challengeId }) => {
                       type="number"
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="y"
-                      stroke="#3B82F6"
-                      strokeWidth={2}
-                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, fill: '#1D4ED8' }}
-                      connectNulls={false}
-                    />
+                    {userIds.map((userId, index) => (
+                      <Line
+                        key={userId}
+                        type="monotone"
+                        dataKey={`user_${userId}`}
+                        stroke={userColors[userId]}
+                        strokeWidth={2}
+                        dot={{ fill: userColors[userId], strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: userColors[userId] }}
+                        connectNulls={false}
+                        name={userNames[userId]}
+                      />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div className="text-center mt-4">
-                <p className="text-gray-400 text-sm">
-                  Points progression showing how users accumulated points from 0 to {maxPoints} through their submission attempts
-                </p>
-                {chartData.length > 0 && (
-                  <p className="text-gray-500 text-xs mt-1">
-                    {chartData.length} submission{chartData.length > 1 ? 's' : ''} from {userIds.length} user{userIds.length > 1 ? 's' : ''}
-                  </p>
+              <div className="mt-4">
+                {/* User Legend */}
+                {userIds.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4 mb-4">
+                    {userIds.map((userId) => (
+                      <div key={userId} className="flex items-center space-x-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: userColors[userId] }}
+                        />
+                        <span className="text-gray-300 text-sm">{userNames[userId]}</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
+                
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">
+                    Points progression showing how each user accumulated points from 0 to {maxPoints} through their submission attempts
+                  </p>
+                  {chartData.length > 0 && (
+                    <p className="text-gray-500 text-xs mt-1">
+                      {chartData.length} step{chartData.length > 1 ? 's' : ''} from {userIds.length} user{userIds.length > 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -296,7 +369,7 @@ const ChallengeLeaderboard = ({ challengeId }) => {
           <div className="mt-4 pt-4 border-t border-gray-700">
             <p className="text-gray-400 text-xs text-center">
               {activeTab === 'graph' 
-                ? `Points progression for ${totalUsers} user${totalUsers > 1 ? 's' : ''} who attempted this challenge`
+                ? `Individual progress lines for ${totalUsers} user${totalUsers > 1 ? 's' : ''} who attempted this challenge`
                 : `Top ${leaderboard.length} performer${leaderboard.length > 1 ? 's' : ''} ranked by speed and points`
               }
             </p>
