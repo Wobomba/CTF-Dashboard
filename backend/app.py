@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -56,6 +56,24 @@ def api_info():
         'version': '1.0.0',
         'description': 'Cybersecurity training platform API'
     })
+
+# Serve static files (frontend)
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('../dist', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    # Check if it's an API route
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    
+    # Try to serve static file
+    try:
+        return send_from_directory('../dist', path)
+    except:
+        # If file not found, serve index.html for SPA routing
+        return send_from_directory('../dist', 'index.html')
 
 # Error handlers
 @app.errorhandler(404)
