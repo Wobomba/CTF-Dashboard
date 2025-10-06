@@ -3,9 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import { useAuth } from './hooks/useAuth'
 import Navbar from './components/Navbar'
+import Auth from './pages/Auth'
 import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Challenges from './pages/Challenges'
 import ChallengeDetail from './pages/ChallengeDetail'
@@ -25,7 +24,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
   
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/auth" replace />
   }
   
   if (adminOnly && !user.is_admin) {
@@ -44,59 +43,42 @@ const PublicRoute = ({ children }) => {
   }
   
   if (user) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/" replace />
   }
   
   return children
 }
 
 const AppContent = () => {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
   
   if (loading) {
     return <LoadingSpinner />
   }
   
+  // If user is not authenticated, show auth page
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
+      </Routes>
+    )
+  }
+  
+  // If user is authenticated, show main app with navbar
   return (
     <div className="min-h-screen bg-slate-900">
       <Navbar />
       <main className="pb-12">
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } />
-          <Route path="/register" element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          } />
-          
-          {/* Public challenge browsing */}
-          <Route path="/challenges" element={<Challenges />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          
           {/* Protected Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/challenge/:id" element={
-            <ProtectedRoute>
-              <ChallengeDetail />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/challenges" element={<Challenges />} />
+          <Route path="/challenge/:id" element={<ChallengeDetail />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/profile" element={<Profile />} />
           
           {/* Admin Routes */}
           <Route path="/admin/setup" element={<AdminSetup />} />
@@ -112,8 +94,8 @@ const AppContent = () => {
               <div className="text-center">
                 <h1 className="text-4xl font-bold text-gray-100 mb-4">404</h1>
                 <p className="text-gray-400 mb-8">Page not found</p>
-                <a href="/" className="btn-primary">
-                  Go Home
+                <a href="/dashboard" className="btn-primary">
+                  Go to Dashboard
                 </a>
               </div>
             </div>
