@@ -28,7 +28,7 @@ def require_admin():
 def check_admin_setup():
     """Check if admin account exists"""
     try:
-        # Security: Check for suspicious user agents
+        
         user_agent = request.headers.get('User-Agent', '').lower()
         suspicious_patterns = [
             'gobuster', 'dirb', 'dirbuster', 'wfuzz', 'burp', 'nikto', 'nmap',
@@ -38,7 +38,6 @@ def check_admin_setup():
         
         is_suspicious = any(pattern in user_agent for pattern in suspicious_patterns)
         if is_suspicious:
-            # Return a generic error to avoid revealing the endpoint
             return jsonify({'error': 'Access denied'}), 403
         
         admin_exists = User.query.filter_by(is_admin=True).first() is not None
@@ -53,7 +52,6 @@ def check_admin_setup():
 def setup_admin():
     """Create the first admin account"""
     try:
-        # Security: Check for suspicious user agents
         user_agent = request.headers.get('User-Agent', '').lower()
         suspicious_patterns = [
             'gobuster', 'dirb', 'dirbuster', 'wfuzz', 'burp', 'nikto', 'nmap',
@@ -66,7 +64,6 @@ def setup_admin():
             # Return a generic error to avoid revealing the endpoint
             return jsonify({'error': 'Access denied'}), 403
         
-        # Check if any admin already exists
         if User.query.filter_by(is_admin=True).first():
             return jsonify({'error': 'Admin account already exists'}), 400
         
@@ -267,9 +264,8 @@ def create_challenge():
             series=data.get('series'),
             operating_system=data.get('operating_system'),
             suggested_tools=data.get('suggested_tools', []),
-            # Legacy fields - provide defaults for backward compatibility
-            answer_type='structured',  # Use 'structured' to indicate new question system
-            correct_answer='',  # Empty since we use questions array
+            answer_type='structured',  
+            correct_answer='',  
             answer_format='',
             validation_regex='',
             is_published=data.get('is_published', False),

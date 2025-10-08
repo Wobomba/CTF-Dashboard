@@ -35,7 +35,7 @@ def get_challenges():
         search = request.args.get('search', '').strip()
         featured_only = request.args.get('featured', 'false').lower() == 'true'
         page = request.args.get('page', 1, type=int)
-        per_page = min(request.args.get('per_page', 20, type=int), 100)  # Max 100 per page
+        per_page = min(request.args.get('per_page', 20, type=int), 100) 
         
         # Base query for published challenges
         query = Challenge.query.filter_by(is_published=True)
@@ -201,7 +201,7 @@ def submit_answer(challenge_id):
         progress.attempts_count += 1
         progress.last_accessed = datetime.utcnow()
 
-        # Check if user already completed this challenge (all questions correct)
+        # Check if user already completed this challenge all questions correct
         existing_correct = Submission.query.filter_by(
             user_id=user_id,
             challenge_id=challenge_id,
@@ -269,7 +269,7 @@ def submit_answer(challenge_id):
             if completion_time and challenge.time_limit and completion_time <= (challenge.time_limit * 0.5):
                 points_awarded = int(points_awarded * 1.2)  # 20% bonus
         
-        # Handle submission record (update existing or create new)
+        # Handle submission record update existing or create new
         if existing_correct and not is_correct:
             # If there's an existing correct submission but this answer is wrong, don't create a new submission
             submission = existing_correct
@@ -288,7 +288,7 @@ def submit_answer(challenge_id):
                     submission = existing_correct
                     print(f"DEBUG: Updated existing submission with new answer: {existing_correct.submitted_answer}")
                 else:
-                    # Fallback: create new submission
+                    # Fallback create new submission
                     submission = Submission(
                         user_id=user_id,
                         challenge_id=challenge_id,
@@ -369,7 +369,6 @@ def submit_answer(challenge_id):
                     print("DEBUG: Challenge partially completed, waiting for more answers")
             except (json.JSONDecodeError, TypeError, KeyError) as e:
                 print(f"DEBUG: Error checking challenge completion: {e}")
-                # Fallback to old behavior
                 challenge.successful_attempts += 1
                 first_attempt = progress.attempts_count == 1
                 progress.complete_challenge(first_attempt=first_attempt, completion_time=completion_time)
@@ -379,7 +378,6 @@ def submit_answer(challenge_id):
         
         db.session.commit()
         
-        # Prepare response
         response_data = {
             'is_correct': is_correct,
             'correct': is_correct,  # Add both for compatibility
@@ -780,7 +778,7 @@ def get_challenge_leaderboard(challenge_id):
                     'is_start': False
                 })
         
-        # Create leaderboard (top performers by speed and points)
+        # Create leaderboard top performers by speed and points
         leaderboard_query = db.session.query(
             Submission.user_id,
             User.username,
@@ -793,9 +791,9 @@ def get_challenge_leaderboard(challenge_id):
             Submission.challenge_id == challenge_id,
             Submission.is_correct == True
         ).order_by(
-            Submission.completion_time.asc().nulls_last(),  # Faster completion first
-            Submission.points_awarded.desc(),  # Higher points first
-            Submission.submitted_at.asc()  # Earlier submission first (tie-breaker)
+            Submission.completion_time.asc().nulls_last(),  
+            Submission.points_awarded.desc(),  
+            Submission.submitted_at.asc()  
         ).limit(10)
         
         leaderboard_data = []

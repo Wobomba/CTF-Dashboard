@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
           setUser(response.data.user)
           setAuthToken(token)
         } catch (error) {
-          // Token is invalid, remove it
           setAuthToken(null)
           setUser(null)
         }

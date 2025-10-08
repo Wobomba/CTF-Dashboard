@@ -69,7 +69,7 @@ const CreateUserModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       setLoading(true)
       
-      // Create user data (remove confirmPassword)
+      // Create user data 
       const { confirmPassword, ...userData } = formData
       
       await adminAPI.createUser(userData)

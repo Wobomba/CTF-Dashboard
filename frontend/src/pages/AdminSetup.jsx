@@ -125,11 +125,11 @@ const AdminSetup = () => {
     
     if (setupAttempts >= 3) {
       setIsBlocked(true)
-      toast.error('Too many setup attempts. Please wait 5 minutes before trying again.')
+      toast.error('Too many setup attempts. Please wait before trying again.')
       setTimeout(() => {
         setIsBlocked(false)
         setSetupAttempts(0)
-      }, 5 * 60 * 1000) // 5 minutes
+      }, 5 * 60 * 1000) 
       return
     }
     

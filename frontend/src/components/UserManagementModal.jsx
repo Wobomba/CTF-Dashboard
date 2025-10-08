@@ -7,7 +7,7 @@ const UserManagementModal = ({ isOpen, onClose, onSuccess }) => {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState('all') // all, admin, regular
+  const [selectedFilter, setSelectedFilter] = useState('all') 
 
   useEffect(() => {
     if (isOpen) {

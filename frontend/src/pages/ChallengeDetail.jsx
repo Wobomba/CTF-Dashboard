@@ -202,7 +202,7 @@ const ChallengeDetail = () => {
 
   // Get questions from challenge data
   const getQuestions = () => {
-    // Use new questions structure if available
+    // Use new questions structure 
     if (challenge?.questions && challenge.questions.length > 0) {
       return challenge.questions.map(q => ({
         key: `question_${q.id}`,
@@ -215,7 +215,7 @@ const ChallengeDetail = () => {
       }))
     }
     
-    // Fallback: parse from instructions (for backward compatibility)
+    
     const questions = []
     if (challenge?.instructions) {
       const lines = challenge.instructions.split('\n')
@@ -235,7 +235,6 @@ const ChallengeDetail = () => {
       })
     }
     
-    // If no structured questions found, create a single answer field
     if (questions.length === 0) {
       questions.push({
         key: 'answer',
@@ -250,9 +249,9 @@ const ChallengeDetail = () => {
     return questions
   }
 
-  // Get tools and files from challenge data
+  
   const tools = challenge?.suggested_tools?.map(toolName => {
-    // Map tool names to icons (you can expand this mapping)
+    
     const iconMap = {
       'grep': '🔍', 'wireshark': '🦈', 'excel': '📊', 'text editor': '📝',
       'notepad': '📝', 'vim': '📝', 'nano': '📝', 'burp suite': '🛡️',
