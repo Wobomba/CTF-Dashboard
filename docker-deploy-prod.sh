@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 Deploying RENU-CERT CyberLab to Production..."
+echo "Deploying RENU-CERT CyberLab to Production..."
 
 # Colors for output
 RED='\033[0;31m'

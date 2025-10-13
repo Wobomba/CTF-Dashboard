@@ -17,22 +17,22 @@ def test_jwt():
     with app.app_context():
         # Create a token
         token = create_access_token(identity="1")
-        print(f"✅ Created token: {token[:50]}...")
+        print(f"Created token: {token[:50]}...")
         
         try:
             # Try to decode it
             decoded = decode_token(token)
-            print(f"✅ Token decoded successfully: {decoded}")
+            print(f"Token decoded successfully: {decoded}")
         except Exception as e:
-            print(f"❌ Token decode failed: {e}")
+            print(f"Token decode failed: {e}")
         
         try:
             # Try to decode with PyJWT directly
             secret = app.config['JWT_SECRET_KEY']
             decoded_raw = pyjwt.decode(token, secret, algorithms=['HS256'])
-            print(f"✅ Raw JWT decode successful: {decoded_raw}")
+            print(f"Raw JWT decode successful: {decoded_raw}")
         except Exception as e:
-            print(f"❌ Raw JWT decode failed: {e}")
+            print(f"Raw JWT decode failed: {e}")
 
 if __name__ == '__main__':
     test_jwt()

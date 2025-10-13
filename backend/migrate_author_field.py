@@ -28,9 +28,9 @@ def migrate_author_field():
                 with db.engine.connect() as conn:
                     conn.execute(db.text('ALTER TABLE challenges ADD COLUMN author VARCHAR(100)'))
                     conn.commit()
-                print("✅ Author column added successfully")
+                print("Author column added successfully")
             else:
-                print("✅ Author column already exists")
+                print("Author column already exists")
             
             # Update existing challenges that don't have an author
             challenges_updated = Challenge.query.filter(
@@ -40,15 +40,15 @@ def migrate_author_field():
             db.session.commit()
             
             if challenges_updated > 0:
-                print(f"✅ Updated {challenges_updated} challenges with default author 'System'")
+                print(f"Updated {challenges_updated} challenges with default author 'System'")
             else:
-                print("✅ All challenges already have authors assigned")
+                print("All challenges already have authors assigned")
                 
         except Exception as e:
-            print(f"❌ Migration failed: {e}")
+            print(f"Migration failed: {e}")
             db.session.rollback()
         
 if __name__ == '__main__':
-    print("🔧 Running author field migration...")
+    print("Running author field migration...")
     migrate_author_field()
-    print("🎉 Migration completed!")
+    print("Migration completed!")

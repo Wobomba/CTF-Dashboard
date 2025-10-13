@@ -9,7 +9,7 @@ class UserProgress(db.Model):
     challenge_id = db.Column(db.Integer, db.ForeignKey('challenges.id'), nullable=False)
     
     # Progress tracking
-    status = db.Column(db.String(20), nullable=False, default='not_started')  # 'not_started', 'in_progress', 'completed', 'abandoned'
+    status = db.Column(db.String(20), nullable=False, default='not_started')  
     started_at = db.Column(db.DateTime)
     completed_at = db.Column(db.DateTime)
     last_accessed = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -17,7 +17,7 @@ class UserProgress(db.Model):
     # Progress details
     attempts_count = db.Column(db.Integer, default=0, nullable=False)
     hints_used = db.Column(db.Integer, default=0, nullable=False)
-    time_spent = db.Column(db.Float, default=0.0, nullable=False)  # Total time spent in minutes
+    time_spent = db.Column(db.Float, default=0.0, nullable=False)  
     
     # Bookmarking and notes
     is_bookmarked = db.Column(db.Boolean, default=False, nullable=False)
@@ -67,7 +67,6 @@ class UserProgress(db.Model):
         
         if completion_time:
             self.time_spent = completion_time
-            # Award speed bonus if completed quickly (implementation depends on challenge)
             from models.challenge import Challenge
             challenge = Challenge.query.get(self.challenge_id)
             if challenge and challenge.time_limit and completion_time <= (challenge.time_limit * 0.5):
@@ -103,9 +102,9 @@ class Achievement(db.Model):
     badge_color = db.Column(db.String(7))  # Hex color code
     
     # Achievement criteria
-    achievement_type = db.Column(db.String(50), nullable=False)  # 'challenges_completed', 'points_earned', 'streak', 'category_master', etc.
+    achievement_type = db.Column(db.String(50), nullable=False)  
     criteria_value = db.Column(db.Integer)  # Required value to unlock
-    category_id = db.Column(db.Integer, db.ForeignKey('challenge_categories.id'))  # For category-specific achievements
+    category_id = db.Column(db.Integer, db.ForeignKey('challenge_categories.id'))  
     
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

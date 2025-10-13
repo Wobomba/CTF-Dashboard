@@ -17,7 +17,7 @@ def get_leaderboard():
     try:
         page = request.args.get('page', 1, type=int)
         per_page = min(request.args.get('per_page', 50, type=int), 100)
-        timeframe = request.args.get('timeframe', 'all')  # 'all', 'month', 'week'
+        timeframe = request.args.get('timeframe', 'all')  
         
         # Base query for active users with scores
         query = User.query.filter(User.is_active == True, User.total_score > 0)
