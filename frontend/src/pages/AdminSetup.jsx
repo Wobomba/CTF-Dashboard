@@ -360,7 +360,7 @@ const AdminSetup = () => {
               className={`w-full py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 ${
                 isBlocked 
                   ? 'bg-red-500 text-white cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
               }`}
             >
               {loading ? 'Creating Account...' : isBlocked ? 'Too Many Attempts - Try Again Later' : 'Create Admin Account'}
