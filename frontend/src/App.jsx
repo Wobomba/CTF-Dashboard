@@ -56,11 +56,12 @@ const AppContent = () => {
     return <LoadingSpinner />
   }
   
-  // If user is not authenticated, show auth page
+  // If user is not authenticated, show auth page or admin setup
   if (!user) {
     return (
       <Routes>
         <Route path="/auth" element={<Auth />} />
+        <Route path="/admin/setup" element={<AdminSetup />} />
         <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     )
@@ -81,7 +82,6 @@ const AppContent = () => {
           <Route path="/profile" element={<Profile />} />
           
           {/* Admin Routes */}
-          <Route path="/admin/setup" element={<AdminSetup />} />
           <Route path="/admin" element={
             <ProtectedRoute adminOnly>
               <AdminDashboard />
