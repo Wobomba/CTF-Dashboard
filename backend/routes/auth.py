@@ -137,13 +137,13 @@ def update_profile():
             if field in data:
                 setattr(user, field, data[field])
         
-        # Handle username update (with validation)
+        # Handle username update with validation
         if 'username' in data:
             new_username = data['username'].strip()
             if len(new_username) < 3:
                 return jsonify({'error': 'Username must be at least 3 characters long'}), 400
             
-            # Check if username is already taken (by another user)
+            # Check if username is already taken by another user
             existing_user = User.query.filter_by(username=new_username).first()
             if existing_user and existing_user.id != user.id:
                 return jsonify({'error': 'Username already exists'}), 409

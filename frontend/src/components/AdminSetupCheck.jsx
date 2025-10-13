@@ -19,9 +19,9 @@ const AdminSetupCheck = ({ children }) => {
         if (response.data.setup_required && location.pathname !== '/admin/setup') {
           navigate('/admin/setup')
         }
-        // If setup is not required and user is on setup page, redirect to login
+        // If setup is not required and user is on setup page, redirect to auth
         else if (!response.data.setup_required && location.pathname === '/admin/setup') {
-          navigate('/login')
+          navigate('/auth')
         }
       } catch (error) {
         console.error('Error checking admin setup:', error)

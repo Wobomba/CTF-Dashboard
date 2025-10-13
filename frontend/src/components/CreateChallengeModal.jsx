@@ -45,19 +45,14 @@ const CreateChallengeModal = ({ isOpen, onClose, onSuccess }) => {
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData()
         formData.append('file', file)
-        
-        // For now, we'll simulate file upload - in real implementation, this would upload to server
-        // const response = await adminAPI.uploadFile(formData)
-        
-        // Simulate upload delay
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         return {
           id: Date.now() + Math.random(),
           name: file.name,
           size: formatFileSize(file.size),
-          password: '', // Can be set later
-          url: URL.createObjectURL(file) // Temporary URL for preview
+          password: '', 
+          url: URL.createObjectURL(file) 
         }
       })
 
@@ -135,7 +130,6 @@ const CreateChallengeModal = ({ isOpen, onClose, onSuccess }) => {
       [name]: type === 'checkbox' ? checked : value
     }))
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -261,7 +255,7 @@ const CreateChallengeModal = ({ isOpen, onClose, onSuccess }) => {
       const cleanedHints = formData.hints.filter(hint => hint.trim() !== '')
       const cleanedTools = formData.suggested_tools.filter(tool => tool.trim() !== '')
       
-      // Process questions - clean empty fields and calculate total points
+      // Process questions
       const cleanedQuestions = formData.questions.map(q => ({
         ...q,
         hints: q.hints.filter(hint => hint.trim() !== '')
@@ -280,7 +274,7 @@ const CreateChallengeModal = ({ isOpen, onClose, onSuccess }) => {
           name: file.name,
           size: file.size,
           password: file.password || null,
-          url: file.url // In real implementation, this would be the server URL
+          url: file.url 
         }))
       }
 

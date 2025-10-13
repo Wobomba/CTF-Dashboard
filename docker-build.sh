@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🐳 Building RENU-CERT CyberLab Docker containers..."
+echo "Building RENU-CERT CyberLab Docker containers..."
 
 # Colors for output
 RED='\033[0;31m'

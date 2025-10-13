@@ -11,7 +11,7 @@ const ChallengeLeaderboard = ({ challengeId }) => {
   const [totalUsers, setTotalUsers] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('graph') // 'graph' or 'list'
+  const [activeTab, setActiveTab] = useState('graph') 
 
   useEffect(() => {
     const fetchLeaderboard = async () => {

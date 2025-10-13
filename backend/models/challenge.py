@@ -7,8 +7,8 @@ class ChallengeCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
-    icon = db.Column(db.String(50))  # Icon name for UI
-    color = db.Column(db.String(7))  # Hex color code
+    icon = db.Column(db.String(50))  
+    color = db.Column(db.String(7))  
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
@@ -35,31 +35,31 @@ class Challenge(db.Model):
     description = db.Column(db.Text, nullable=False)
     
     # Challenge content
-    scenario = db.Column(db.Text)  # Background story/scenario
-    instructions = db.Column(db.Text, nullable=False)  # What users need to do
-    questions = db.Column(db.JSON)  # Array of structured questions
-    hints = db.Column(db.JSON)  # Array of hints (deprecated - use per-question hints)
+    scenario = db.Column(db.Text)  
+    instructions = db.Column(db.Text, nullable=False)  
+    questions = db.Column(db.JSON)  
+    hints = db.Column(db.JSON)  
     
     # Challenge configuration
-    challenge_type = db.Column(db.String(50), nullable=False)  # 'investigation', 'ctf', 'analysis', 'simulation'
-    difficulty = db.Column(db.String(20), nullable=False)  # 'beginner', 'intermediate', 'advanced', 'expert'
-    author = db.Column(db.String(100))  # Challenge author name
-    series = db.Column(db.String(200))  # Series name (e.g., "Web Security Fundamentals")
+    challenge_type = db.Column(db.String(50), nullable=False)  
+    difficulty = db.Column(db.String(20), nullable=False)  
+    author = db.Column(db.String(100))  
+    series = db.Column(db.String(200))  
     points = db.Column(db.Integer, default=100, nullable=False)
-    time_limit = db.Column(db.Integer)  # Time limit in minutes (optional)
-    operating_system = db.Column(db.String(50))  # Target operating system
+    time_limit = db.Column(db.Integer)  
+    operating_system = db.Column(db.String(50))  
     
     # Files and resources
-    file_attachments = db.Column(db.JSON)  # Array of file paths/URLs
-    suggested_tools = db.Column(db.JSON)  # Array of suggested tools
-    docker_image = db.Column(db.String(255))  # Docker container for lab environment
-    environment_url = db.Column(db.String(255))  # URL to lab environment
+    file_attachments = db.Column(db.JSON)  
+    suggested_tools = db.Column(db.JSON)  
+    docker_image = db.Column(db.String(255))  
+    environment_url = db.Column(db.String(255))  
     
     # Answers and validation
-    answer_type = db.Column(db.String(20), nullable=False)  # 'text', 'file', 'multiple_choice', 'flag'
-    correct_answer = db.Column(db.Text)  # Encrypted/hashed correct answer
-    answer_format = db.Column(db.String(100))  # Expected format (e.g., "flag{...}", "IP address")
-    validation_regex = db.Column(db.String(500))  # Regex for answer validation
+    answer_type = db.Column(db.String(20), nullable=False)  
+    correct_answer = db.Column(db.Text)  
+    answer_format = db.Column(db.String(100))  
+    validation_regex = db.Column(db.String(500))  
     
     # Publishing and visibility
     is_published = db.Column(db.Boolean, default=False, nullable=False)
@@ -74,7 +74,7 @@ class Challenge(db.Model):
     # Stats
     total_attempts = db.Column(db.Integer, default=0, nullable=False)
     successful_attempts = db.Column(db.Integer, default=0, nullable=False)
-    average_completion_time = db.Column(db.Float)  # In minutes
+    average_completion_time = db.Column(db.Float)  
     
     # Foreign keys
     category_id = db.Column(db.Integer, db.ForeignKey('challenge_categories.id'), nullable=False)
@@ -153,8 +153,8 @@ class Submission(db.Model):
     completion_time = db.Column(db.Float)  # Time taken in minutes
     
     # Feedback
-    feedback = db.Column(db.Text)  # Optional feedback for incorrect submissions
-    hint_count = db.Column(db.Integer, default=0, nullable=False)  # Number of hints used
+    feedback = db.Column(db.Text)  
+    hint_count = db.Column(db.Integer, default=0, nullable=False)  
     
     # File submissions (for challenges requiring file uploads)
     submitted_files = db.Column(db.JSON)  # Array of uploaded file paths

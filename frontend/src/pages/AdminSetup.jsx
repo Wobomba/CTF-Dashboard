@@ -9,6 +9,7 @@ const AdminSetup = () => {
   const [loading, setLoading] = useState(false)
   const [setupAttempts, setSetupAttempts] = useState(0)
   const [isBlocked, setIsBlocked] = useState(false)
+  const [csrfToken, setCsrfToken] = useState('')
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -21,13 +22,18 @@ const AdminSetup = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    // Check if admin already exists
+    // Check if admin already exists and get CSRF token
     const checkAdminSetup = async () => {
       try {
         const response = await adminAPI.checkSetup()
         if (!response.data.setup_required) {
-          // Admin already exists, redirect to login
-          navigate('/login')
+          // Admin already exists, redirect to auth
+          navigate('/auth')
+        } else {
+          // Store CSRF token for setup
+          if (response.data.csrf_token) {
+            setCsrfToken(response.data.csrf_token)
+          }
         }
       } catch (error) {
         console.error('Error checking admin setup:', error)
@@ -92,8 +98,20 @@ const AdminSetup = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required'
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters'
+    } else {
+      // Enhanced password strength validation
+      const password = formData.password
+      if (password.length < 12) {
+        newErrors.password = 'Password must be at least 12 characters long'
+      } else if (!/[A-Z]/.test(password)) {
+        newErrors.password = 'Password must contain at least one uppercase letter'
+      } else if (!/[a-z]/.test(password)) {
+        newErrors.password = 'Password must contain at least one lowercase letter'
+      } else if (!/[0-9]/.test(password)) {
+        newErrors.password = 'Password must contain at least one number'
+      } else if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) {
+        newErrors.password = 'Password must contain at least one special character'
+      }
     }
 
     if (!formData.confirmPassword) {
@@ -125,11 +143,11 @@ const AdminSetup = () => {
     
     if (setupAttempts >= 3) {
       setIsBlocked(true)
-      toast.error('Too many setup attempts. Please wait 5 minutes before trying again.')
+      toast.error('Too many setup attempts. Please wait before trying again.')
       setTimeout(() => {
         setIsBlocked(false)
         setSetupAttempts(0)
-      }, 5 * 60 * 1000) // 5 minutes
+      }, 5 * 60 * 1000) 
       return
     }
     
@@ -142,7 +160,11 @@ const AdminSetup = () => {
     
     try {
       const { confirmPassword, ...adminData } = formData
-      const response = await adminAPI.setupAdmin(adminData)
+      // Include CSRF token in the request
+      const response = await adminAPI.setupAdmin({
+        ...adminData,
+        csrf_token: csrfToken
+      })
       
       // Store the auth token
       setAuthToken(response.data.access_token)
@@ -177,6 +199,12 @@ const AdminSetup = () => {
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Admin Setup</h1>
           <p className="text-gray-300">Create your administrator account to get started</p>
+          <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
+            <p className="text-yellow-200 text-sm">
+              <strong>Security Notice:</strong> This setup is only available during initial installation. 
+              Strong passwords and secure practices are enforced.
+            </p>
+          </div>
         </div>
 
         {/* Setup Form */}
