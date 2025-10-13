@@ -111,6 +111,14 @@ def validate_referer():
     if referer.startswith(expected_origin) or origin == expected_origin:
         return True
     
+    # Allow requests from frontend development server (localhost:3000)
+    if referer.startswith('http://localhost:3000') or origin == 'http://localhost:3000':
+        return True
+    
+    # Allow requests from frontend development server (127.0.0.1:3000)
+    if referer.startswith('http://127.0.0.1:3000') or origin == 'http://127.0.0.1:3000':
+        return True
+    
     return False
 
 def rate_limit_check(ip):
