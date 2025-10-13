@@ -143,6 +143,10 @@ def setup_attempt_check(ip):
     if ip not in security_storage:
         security_storage[ip] = {'setup_attempts': []}
     
+    # Ensure setup_attempts key exists
+    if 'setup_attempts' not in security_storage[ip]:
+        security_storage[ip]['setup_attempts'] = []
+    
     # Clean old attempts
     security_storage[ip]['setup_attempts'] = [
         attempt_time for attempt_time in security_storage[ip]['setup_attempts'] 
@@ -160,6 +164,10 @@ def record_setup_attempt(ip):
     current_time = time.time()
     if ip not in security_storage:
         security_storage[ip] = {'setup_attempts': []}
+    
+    # Ensure setup_attempts key exists
+    if 'setup_attempts' not in security_storage[ip]:
+        security_storage[ip]['setup_attempts'] = []
     
     security_storage[ip]['setup_attempts'].append(current_time)
 
