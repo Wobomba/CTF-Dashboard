@@ -76,7 +76,7 @@ services:
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
       - ./nginx/ssl:/etc/nginx/ssl
-      - ./frontend/dist:/usr/share/nginx/html
+      - ./dist:/usr/share/nginx/html
     depends_on:
       - backend
     restart: unless-stopped

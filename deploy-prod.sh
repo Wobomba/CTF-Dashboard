@@ -46,7 +46,7 @@ if [ ! -f .env ]; then
 fi
 
 # Check if frontend is built
-if [ ! -d "frontend/dist" ]; then
+if [ ! -d "dist" ]; then
     print_status "Building frontend for production..."
     cd frontend
     npm ci
