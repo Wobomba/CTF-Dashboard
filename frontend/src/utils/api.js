@@ -118,6 +118,9 @@ export const isAuthenticated = () => {
 
 // Error handling utility
 export const handleApiError = (error, defaultMessage = 'An error occurred') => {
+  console.error('API Error:', error)
+  console.error('Error response:', error.response?.data)
+  
   if (error.response?.data?.error) {
     return error.response.data.error
   } else if (error.message) {

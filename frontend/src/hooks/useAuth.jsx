@@ -60,12 +60,9 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true)
       const response = await authAPI.register(userData)
-      const { access_token, user: newUser } = response.data
       
-      setAuthToken(access_token)
-      setUser(newUser)
-      
-      toast.success(`Welcome to RENU-CERT CyberLab, ${newUser.username}!`)
+      // Don't auto-login, just show success message
+      toast.success(`Account created successfully! Please log in to continue.`)
       return { success: true }
     } catch (error) {
       const errorMessage = handleApiError(error, 'Registration failed')

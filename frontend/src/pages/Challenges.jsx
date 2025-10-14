@@ -39,15 +39,23 @@ const Challenges = () => {
 
   const fetchData = async () => {
     try {
+      console.log('Fetching challenges and categories...')
       const [challengesResponse, categoriesResponse] = await Promise.all([
         challengesAPI.getChallenges(),
         challengesAPI.getCategories()
       ])
       
-      setChallenges(challengesResponse.data.challenges)
-      setCategories(categoriesResponse.data.categories)
+      console.log('Challenges response:', challengesResponse.data)
+      console.log('Categories response:', categoriesResponse.data)
+      
+      setChallenges(challengesResponse.data.challenges || [])
+      setCategories(categoriesResponse.data.categories || [])
     } catch (error) {
       console.error('Failed to fetch data:', error)
+      console.error('Error details:', error.response?.data)
+      // Set empty arrays as fallback
+      setChallenges([])
+      setCategories([])
     } finally {
       setLoading(false)
     }
@@ -63,10 +71,14 @@ const Challenges = () => {
       if (selectedType) params.type = selectedType
       if (featuredOnly) params.featured = true
 
+      console.log('Fetching challenges with params:', params)
       const response = await challengesAPI.getChallenges(params)
-      setChallenges(response.data.challenges)
+      console.log('Challenges response:', response.data)
+      setChallenges(response.data.challenges || [])
     } catch (error) {
       console.error('Failed to fetch challenges:', error)
+      console.error('Error details:', error.response?.data)
+      setChallenges([])
     }
   }
 
