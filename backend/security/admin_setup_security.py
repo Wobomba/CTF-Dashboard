@@ -23,7 +23,7 @@ except ImportError:
         'IP_WHITELIST': ['137.63.184.198', '127.0.0.1', '::1'],
         'REQUIRE_HTTPS': False,
         'SESSION_TIMEOUT_MINUTES': 30,
-        'RATE_LIMIT_REQUESTS': 5,
+        'RATE_LIMIT_REQUESTS': 50,
         'RATE_LIMIT_WINDOW_MINUTES': 1,
         'CSRF_TOKEN_LENGTH': 32,
         'PASSWORD_MIN_LENGTH': 12,

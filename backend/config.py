@@ -16,7 +16,7 @@ SECURITY_CONFIG = {
     
     # Rate limiting
     'RATE_LIMIT_ENABLED': os.getenv('RATE_LIMIT_ENABLED', 'true').lower() == 'true',
-    'RATE_LIMIT_REQUESTS': int(os.getenv('RATE_LIMIT_REQUESTS', '5')),
+    'RATE_LIMIT_REQUESTS': int(os.getenv('RATE_LIMIT_REQUESTS', '50')),
     'RATE_LIMIT_WINDOW_MINUTES': int(os.getenv('RATE_LIMIT_WINDOW_MINUTES', '1')),
     
     # Admin setup limits
