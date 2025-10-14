@@ -3,61 +3,63 @@ version: '3.8'
 services:
   # PostgreSQL Database
   db:
-    image: postgres:13-alpine
-    container_name: cyberlab-db-prod
+    image: postgres:15-alpine
+    container_name: renu-cert-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-cyberlab}
-      POSTGRES_USER: ${POSTGRES_USER:-cyberlab}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: renu_cert_cyberlab
+      POSTGRES_USER: ${DB_USER:-renu_cert_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - cyberlab-network
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cyberlab} -d ${POSTGRES_DB:-cyberlab}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-renu_cert_user} -d renu_cert_cyberlab"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Redis Cache
+  # Redis Cache (Optional)
   redis:
     image: redis:7-alpine
-    container_name: cyberlab-redis-prod
-    volumes:
-      - redis_data:/data
-    networks:
-      - cyberlab-network
+    container_name: renu-cert-redis
+    ports:
+      - "6379:6379"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Main Application
-  app:
-    build: .
-    container_name: cyberlab-app-prod
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: renu-cert-backend
     environment:
       - FLASK_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-cyberlab}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cyberlab}
+      - DATABASE_URL=postgresql://${DB_USER:-renu_cert_user}:${DB_PASSWORD:-secure_password_123}@db:5432/renu_cert_cyberlab
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
-    networks:
-      - cyberlab-network
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-jwt-key-change-this-in-production}
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-flask-key-change-this-in-production}
+      - ADMIN_SETUP_IP_WHITELIST=${ADMIN_SETUP_IP_WHITELIST:-137.63.184.198,127.0.0.1,::1}
+      - REQUIRE_HTTPS=${REQUIRE_HTTPS:-false}
+      - ENABLE_RATE_LIMITING=${ENABLE_RATE_LIMITING:-true}
+    ports:
+      - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - uploads_data:/app/uploads
-      - logs_data:/app/logs
     restart: unless-stopped
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
@@ -67,30 +69,23 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: cyberlab-nginx-prod
+    container_name: renu-cert-nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
       - ./nginx/ssl:/etc/nginx/ssl
-      - ./dist:/usr/share/nginx/html
+      - ./frontend/dist:/usr/share/nginx/html
     depends_on:
-      - app
-    networks:
-      - cyberlab-network
+      - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:
     driver: local
-  redis_data:
-    driver: local
-  uploads_data:
-    driver: local
-  logs_data:
-    driver: local
-
-networks:
-  cyberlab-network:
-    driver: bridge
