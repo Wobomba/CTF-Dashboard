@@ -82,7 +82,18 @@ const Auth = () => {
         })
 
     if (result.success) {
-      // Navigation will be handled by the auth hook - redirects to home page
+      if (isLogin) {
+        // Navigation will be handled by the auth hook - redirects to home page
+      } else {
+        // After registration, switch to login mode
+        setIsLogin(true)
+        setFormData({
+          username: '',
+          email: formData.email, // Keep email for convenience
+          password: '',
+          confirmPassword: ''
+        })
+      }
     }
   }
 
