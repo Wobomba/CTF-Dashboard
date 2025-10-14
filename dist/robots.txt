@@ -1,0 +1,49 @@
+User-agent: *
+Disallow: /admin/setup
+Disallow: /admin/
+Disallow: /api/admin/
+Disallow: /api/auth/
+Disallow: /api/progress/
+
+# Block common security tools
+User-agent: gobuster
+Disallow: /
+
+User-agent: dirb
+Disallow: /
+
+User-agent: dirbuster
+Disallow: /
+
+User-agent: wfuzz
+Disallow: /
+
+User-agent: nikto
+Disallow: /
+
+User-agent: nmap
+Disallow: /
+
+User-agent: sqlmap
+Disallow: /
+
+User-agent: w3af
+Disallow: /
+
+User-agent: zap
+Disallow: /
+
+User-agent: burp
+Disallow: /
+
+User-agent: scanner
+Disallow: /
+
+User-agent: crawler
+Disallow: /
+
+User-agent: bot
+Disallow: /
+
+User-agent: spider
+Disallow: /
