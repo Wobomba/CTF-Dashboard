@@ -2,7 +2,23 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+// Determine API base URL based on current protocol
+const getApiBaseUrl = () => {
+  // If VITE_API_URL is set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // If running in production with HTTPS, use HTTPS for API
+  if (window.location.protocol === 'https:') {
+    return `${window.location.protocol}//${window.location.host}/api`
+  }
+  
+  // Default to relative path for development
+  return '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 // Utility functions (defined early so they can be used in interceptors)
 export const getAuthToken = () => {
