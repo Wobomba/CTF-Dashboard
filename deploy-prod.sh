@@ -49,6 +49,14 @@ fi
 if [ ! -d "dist" ]; then
     print_status "Building frontend for production..."
     cd frontend
+    
+    # Set production environment variables
+    if [ -f "env.production.example" ] && [ ! -f ".env.production" ]; then
+        print_status "Setting up production environment..."
+        cp env.production.example .env.production
+        print_warning "Please update .env.production with your domain name!"
+    fi
+    
     npm ci
     npm run build
     cd ..
