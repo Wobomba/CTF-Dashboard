@@ -46,7 +46,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-jwt-key-change-this-in-production}
       - SECRET_KEY=${SECRET_KEY:-your-super-secret-flask-key-change-this-in-production}
-      - ADMIN_SETUP_IP_WHITELIST=${ADMIN_SETUP_IP_WHITELIST:-137.63.184.198,127.0.0.1,::1}
+      - ADMIN_SETUP_IP_WHITELIST=${ADMIN_SETUP_IP_WHITELIST:-}
       - REQUIRE_HTTPS=${REQUIRE_HTTPS:-false}
       - ENABLE_RATE_LIMITING=${ENABLE_RATE_LIMITING:-true}
     ports:

@@ -8,7 +8,7 @@ SECURITY_CONFIG = {
     # IP Whitelist - Only these IPs can access admin setup
     'ADMIN_SETUP_IP_WHITELIST': os.getenv(
         'ADMIN_SETUP_IP_WHITELIST', 
-        '137.63.184.198,127.0.0.1,::1'
+        ''
     ).split(','),
     
     # HTTPS requirement (set to false for development)
