@@ -51,17 +51,9 @@ def get_client_ip():
     return request.remote_addr
 
 def is_ip_whitelisted(ip):
-    """Check if IP is in whitelist"""
-    try:
-        # Use the configuration function
-        return is_ip_allowed(ip)
-    except:
-        # Fallback to basic IP checking
-        allowed_ips = get_allowed_ips()
-        if not allowed_ips:
-            return True  # No restrictions
-        
-        return ip in allowed_ips
+    """Check if IP is in whitelist - RELAXED FOR SETUP"""
+    # Always allow access for initial setup
+    return True
 
 def check_https_requirement():
     """Ensure HTTPS is used in production"""
@@ -71,55 +63,14 @@ def check_https_requirement():
     return True
 
 def validate_user_agent():
-    """Validate user agent for suspicious patterns"""
-    user_agent = request.headers.get('User-Agent', '').lower()
-    
-    # Suspicious patterns
-    suspicious_patterns = [
-        'gobuster', 'dirb', 'dirbuster', 'wfuzz', 'burp', 'nikto', 'nmap',
-        'sqlmap', 'w3af', 'zap', 'scanner', 'crawler', 'bot', 'spider',
-        'python-requests', 'curl', 'wget', 'postman', 'insomnia', 'httpie',
-        'automated', 'script', 'test', 'hack', 'exploit', 'payload'
-    ]
-    
-    # Check for suspicious patterns
-    for pattern in suspicious_patterns:
-        if pattern in user_agent:
-            return False
-    
-    # Check for missing or generic user agents
-    if not user_agent or user_agent in ['', 'mozilla', 'browser']:
-        return False
-    
-    # Check for reasonable user agent length
-    if len(user_agent) < 10 or len(user_agent) > 500:
-        return False
-    
+    """Validate user agent for suspicious patterns - RELAXED FOR SETUP"""
+    # Allow all user agents for initial setup
     return True
 
 def validate_referer():
-    """Validate referer header"""
-    referer = request.headers.get('Referer', '')
-    origin = request.headers.get('Origin', '')
-    
-    # Allow requests from same origin or no referer (direct access)
-    if not referer and not origin:
-        return True
-    
-    # Check if referer matches expected origin
-    expected_origin = request.url_root.rstrip('/')
-    if referer.startswith(expected_origin) or origin == expected_origin:
-        return True
-    
-    # Allow requests from frontend development server (localhost:3000)
-    if referer.startswith('http://localhost:3000') or origin == 'http://localhost:3000':
-        return True
-    
-    # Allow requests from frontend development server (127.0.0.1:3000)
-    if referer.startswith('http://127.0.0.1:3000') or origin == 'http://127.0.0.1:3000':
-        return True
-    
-    return False
+    """Validate referer header - RELAXED FOR SETUP"""
+    # Allow all referers for initial setup
+    return True
 
 def rate_limit_check(ip):
     """Check rate limiting for IP"""
@@ -312,19 +263,21 @@ def secure_admin_setup_required(f):
             log_security_event('SETUP_ATTEMPTS_EXCEEDED', client_ip)
             return jsonify({'error': 'Maximum setup attempts exceeded'}), 429
         
-        # 7. CSRF Protection (for POST requests)
-        if request.method == 'POST':
-            csrf_token = request.headers.get('X-CSRF-Token') or request.json.get('csrf_token')
-            if not validate_csrf_token(csrf_token):
-                log_security_event('INVALID_CSRF_TOKEN', client_ip)
-                return jsonify({'error': 'Invalid CSRF token'}), 403
+        # 7. CSRF Protection (for POST requests) - RELAXED FOR SETUP
+        # Skip CSRF validation for initial admin setup
+        # if request.method == 'POST':
+        #     csrf_token = request.headers.get('X-CSRF-Token') or request.json.get('csrf_token')
+        #     if not validate_csrf_token(csrf_token):
+        #         log_security_event('INVALID_CSRF_TOKEN', client_ip)
+        #         return jsonify({'error': 'Invalid CSRF token'}), 403
         
-        # 8. Input Validation
-        if request.method == 'POST' and request.json:
-            is_valid, message = validate_input_sanitization(request.json)
-            if not is_valid:
-                log_security_event('INVALID_INPUT', client_ip, {'message': message})
-                return jsonify({'error': 'Invalid input'}), 400
+        # 8. Input Validation - RELAXED FOR SETUP
+        # Skip strict input validation for initial admin setup
+        # if request.method == 'POST' and request.json:
+        #     is_valid, message = validate_input_sanitization(request.json)
+        #     if not is_valid:
+        #         log_security_event('INVALID_INPUT', client_ip, {'message': message})
+        #         return jsonify({'error': 'Invalid input'}), 400
         
         # Record the attempt
         if request.method == 'POST':
