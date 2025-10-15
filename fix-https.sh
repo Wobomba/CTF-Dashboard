@@ -1,74 +1,78 @@
 #!/bin/bash
 
-# Quick fix for HTTPS Mixed Content issues
+# Fix HTTPS Mixed Content Issues
+# This script ensures the frontend is built with HTTPS API URLs
+
+set -e
+
 echo "🔧 Fixing HTTPS Mixed Content Issues..."
 
-# Colors
+# Colors for output
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
 print_status() {
-    echo -e "${BLUE}[FIX]${NC} $1"
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 print_success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
+# Step 1: Create production environment file for frontend
+print_status "Creating frontend production environment file..."
 
-# 1. Update frontend environment
-print_status "Setting up frontend HTTPS configuration..."
-cd frontend
+cat > frontend/.env.production << EOF
+# Production Environment Variables for Frontend
+# This ensures all API calls use HTTPS to avoid Mixed Content errors
 
-# Create production environment file
-if [ ! -f ".env.production" ]; then
-    if [ -f "env.production.example" ]; then
-        cp env.production.example .env.production
-        print_success "Created .env.production from template"
-    else
-        echo "VITE_API_URL=https://cyberlab.renu.ac.ug/api" > .env.production
-        print_success "Created .env.production with HTTPS API URL"
-    fi
-else
-    print_success ".env.production already exists"
-fi
+# API Base URL - Use HTTPS in production
+VITE_API_URL=https://cyberlab.renu.ac.ug/api
 
-# 2. Rebuild frontend with HTTPS configuration
+# Enable production optimizations
+VITE_NODE_ENV=production
+EOF
+
+print_success "Frontend environment file created"
+
+# Step 2: Rebuild frontend with HTTPS configuration
 print_status "Rebuilding frontend with HTTPS configuration..."
+
+cd frontend
+npm ci
 npm run build
-
-if [ $? -eq 0 ]; then
-    print_success "Frontend rebuilt successfully"
-else
-    print_warning "Frontend build failed, but continuing..."
-fi
-
 cd ..
 
-# 3. Update Docker containers
-print_status "Updating Docker containers with HTTPS configuration..."
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml up --build -d
+print_success "Frontend rebuilt with HTTPS configuration"
 
-# 4. Wait for services
-print_status "Waiting for services to start..."
-sleep 30
+# Step 3: Rebuild Docker containers
+print_status "Rebuilding Docker containers..."
 
-# 5. Test HTTPS
-print_status "Testing HTTPS configuration..."
-if curl -k -f https://localhost/health > /dev/null 2>&1; then
-    print_success "HTTPS is working!"
+docker-compose down
+docker-compose up --build -d
+
+print_success "Docker containers rebuilt"
+
+# Step 4: Verify the fix
+print_status "Verifying HTTPS configuration..."
+
+# Check if the built frontend contains HTTPS API URLs
+if grep -q "https://cyberlab.renu.ac.ug/api" frontend/dist/assets/*.js 2>/dev/null; then
+    print_success "✅ Frontend built with HTTPS API URLs"
 else
-    print_warning "HTTPS test failed, but services may still be starting..."
+    echo "⚠️  Warning: Frontend may not have HTTPS API URLs embedded"
 fi
 
-print_success "🎉 HTTPS fix completed!"
-print_warning "Make sure your SSL certificates are properly configured:"
-print_warning "  - Certificate: /etc/nginx/ssl/cert.pem"
-print_warning "  - Private Key: /etc/nginx/ssl/key.pem"
-print_warning "  - Update .env.production with your domain name"
+echo ""
+print_success "🎉 HTTPS Mixed Content fix completed!"
+echo ""
+echo "Next steps:"
+echo "1. Access your application at: https://cyberlab.renu.ac.ug"
+echo "2. Check browser console for any remaining errors"
+echo "3. Verify that challenges load properly"
+echo ""
+echo "If you still see Mixed Content errors:"
+echo "1. Clear your browser cache"
+echo "2. Hard refresh the page (Ctrl+F5 or Cmd+Shift+R)"
+echo "3. Check that SSL certificates are properly configured"

@@ -4,13 +4,18 @@ import toast from 'react-hot-toast'
 
 // Determine API base URL based on current protocol
 const getApiBaseUrl = () => {
-  // If VITE_API_URL is set, use it
+  // If VITE_API_URL is set, use it (this should be set in production)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL
   }
   
   // If running in production with HTTPS, use HTTPS for API
   if (window.location.protocol === 'https:') {
+    return `${window.location.protocol}//${window.location.host}/api`
+  }
+  
+  // If running in production with HTTP, use HTTP for API (fallback)
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     return `${window.location.protocol}//${window.location.host}/api`
   }
   
