@@ -26,7 +26,13 @@ db.init_app(app)
 # Initialize other extensions
 jwt = JWTManager(app)
 migrate = Migrate(app, db)
-CORS(app, origins=[os.getenv('FRONTEND_URL', 'http://localhost:3000')])
+CORS(app, origins=[
+    os.getenv('FRONTEND_URL', 'http://localhost:3000'),
+    'http://cyberlab.renu.ac.ug',
+    'https://cyberlab.renu.ac.ug',
+    'http://localhost:3000',
+    'http://localhost:5173'
+])
 
 # Import models
 from models.user import User
