@@ -14,6 +14,10 @@ RUN npm ci
 # Copy frontend source
 COPY . .
 
+# Set production environment variables for HTTPS API
+ENV VITE_API_URL=https://cyberlab.renu.ac.ug/api
+ENV VITE_NODE_ENV=production
+
 # Build the frontend
 RUN npm run build
 
