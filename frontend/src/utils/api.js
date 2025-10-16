@@ -88,6 +88,17 @@ export const authAPI = {
   validateToken: () => api.get('/auth/validate-token'),
 }
 
+// Password Reset API
+export const passwordResetAPI = {
+  forgotPassword: (email) => api.post('/password-reset/forgot-password', { email }),
+  resetPassword: (token, newPassword, confirmPassword) => api.post('/password-reset/reset-password', {
+    token,
+    new_password: newPassword,
+    confirm_password: confirmPassword
+  }),
+  validateToken: (token) => api.get(`/password-reset/validate-reset-token/${token}`),
+}
+
 // Challenges API
 export const challengesAPI = {
   getCategories: () => api.get('/challenges/categories'),
