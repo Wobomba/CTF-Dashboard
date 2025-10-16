@@ -44,12 +44,14 @@ from routes.auth import auth_bp
 from routes.challenges import challenges_bp
 from routes.admin import admin_bp
 from routes.progress import progress_bp
+from routes.files import files_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(challenges_bp, url_prefix='/api/challenges')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(progress_bp, url_prefix='/api/progress')
+app.register_blueprint(files_bp, url_prefix='/api/files')
 
 @app.route('/api/health')
 def health_check():

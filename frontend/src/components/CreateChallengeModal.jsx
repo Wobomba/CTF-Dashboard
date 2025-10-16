@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { X, Plus, Trash2, AlertCircle, Upload, FileText } from 'lucide-react'
-import { adminAPI, challengesAPI } from '../utils/api'
+import { adminAPI, challengesAPI, filesAPI } from '../utils/api'
 import toast from 'react-hot-toast'
 
 const CreateChallengeModal = ({ isOpen, onClose, onSuccess }) => {
@@ -45,21 +45,17 @@ const CreateChallengeModal = ({ isOpen, onClose, onSuccess }) => {
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData()
         formData.append('file', file)
-        await new Promise(resolve => setTimeout(resolve, 1000))
         
-        return {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          size: formatFileSize(file.size),
-          password: '', 
-          url: URL.createObjectURL(file) 
-        }
+        // Upload file to backend
+        const response = await filesAPI.uploadFile(formData)
+        return response.data.file
       })
 
       const newFiles = await Promise.all(uploadPromises)
       setUploadedFiles(prev => [...prev, ...newFiles])
       toast.success(`${files.length} file(s) uploaded successfully`)
     } catch (error) {
+      console.error('File upload error:', error)
       toast.error('Failed to upload files')
     } finally {
       setUploading(false)

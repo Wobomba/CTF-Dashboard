@@ -127,6 +127,20 @@ export const adminAPI = {
   createUser: (userData) => api.post('/admin/users', userData),
 }
 
+// Files API
+export const filesAPI = {
+  uploadFile: (formData) => api.post('/files/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+  downloadFile: (filename) => api.get(`/files/download/${filename}`, {
+    responseType: 'blob',
+  }),
+  listFiles: () => api.get('/files/list'),
+  deleteFile: (filename) => api.delete(`/files/delete/${filename}`),
+}
+
 
 export const isAuthenticated = () => {
   return !!getAuthToken()
