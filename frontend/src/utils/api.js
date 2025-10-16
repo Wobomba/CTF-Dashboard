@@ -126,6 +126,7 @@ export const adminAPI = {
   toggleUserActive: (userId) => api.post(`/admin/users/${userId}/toggle-active`),
   toggleUserAdmin: (userId) => api.post(`/admin/users/${userId}/toggle-admin`),
   createUser: (userData) => api.post('/admin/users', userData),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
 }
 
 // Files API

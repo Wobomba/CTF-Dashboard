@@ -532,6 +532,50 @@ def clear_challenge_submissions(challenge_id):
         db.session.rollback()
         return jsonify({'error': 'Failed to clear submissions', 'details': str(e)}), 500
 
+@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+@require_admin()
+def delete_user(user_id):
+    """Delete a user"""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        current_user_id = int(get_jwt_identity())
+        
+        # Prevent self-deletion
+        if user.id == current_user_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 403
+        
+        # Prevent deletion of other admin users
+        if user.is_admin:
+            return jsonify({'error': 'Cannot delete admin users'}), 403
+        
+        # Get user info before deletion
+        username = user.username
+        email = user.email
+        
+        # Delete all submissions by this user
+        Submission.query.filter_by(user_id=user_id).delete()
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Successfully deleted user "{username}" ({email})',
+            'deleted_user': {
+                'id': user_id,
+                'username': username,
+                'email': email
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete user', 'details': str(e)}), 500
+
 def calculate_category_success_rate(category):
     """Calculate overall success rate for a category"""
     total_attempts = 0

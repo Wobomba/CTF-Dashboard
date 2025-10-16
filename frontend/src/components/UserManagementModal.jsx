@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Shield, Users, Settings, Eye, EyeOff, User as UserIcon } from 'lucide-react'
+import { X, Shield, Users, Settings, Eye, EyeOff, User as UserIcon, Trash2 } from 'lucide-react'
 import { adminAPI } from '../utils/api'
 import toast from 'react-hot-toast'
 
@@ -61,6 +61,27 @@ const UserManagementModal = ({ isOpen, onClose, onSuccess }) => {
       if (onSuccess) onSuccess()
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Failed to update user status'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleDeleteUser = async (user) => {
+    const confirmMessage = `Are you sure you want to delete user "${user.username}" (${user.email})? This action cannot be undone and will also delete all their submissions.`
+
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    try {
+      await adminAPI.deleteUser(user.id)
+      toast.success(`Successfully deleted user "${user.username}"`)
+      
+      // Remove user from the list
+      setUsers(prev => prev.filter(u => u.id !== user.id))
+      
+      if (onSuccess) onSuccess()
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Failed to delete user'
       toast.error(errorMessage)
     }
   }
@@ -217,6 +238,18 @@ const UserManagementModal = ({ isOpen, onClose, onSuccess }) => {
                             </>
                           )}
                         </button>
+
+                        {/* Delete User Button */}
+                        {!user.is_admin && (
+                          <button
+                            onClick={() => handleDeleteUser(user)}
+                            className="px-3 py-1 rounded text-sm font-medium transition-colors bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                            title="Delete user"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1 inline" />
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
