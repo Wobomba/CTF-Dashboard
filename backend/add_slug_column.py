@@ -21,11 +21,15 @@ def add_slug_column():
         
         try:
             # Add the slug column
-            db.engine.execute("ALTER TABLE challenges ADD COLUMN slug VARCHAR(250)")
+            with db.engine.connect() as connection:
+                connection.execute(db.text("ALTER TABLE challenges ADD COLUMN slug VARCHAR(250)"))
+                connection.commit()
             print("✅ Successfully added slug column to challenges table")
             
             # Create unique index on slug column
-            db.engine.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_challenges_slug ON challenges (slug)")
+            with db.engine.connect() as connection:
+                connection.execute(db.text("CREATE UNIQUE INDEX IF NOT EXISTS ix_challenges_slug ON challenges (slug)"))
+                connection.commit()
             print("✅ Successfully created unique index on slug column")
             
         except Exception as e:

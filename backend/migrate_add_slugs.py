@@ -22,8 +22,9 @@ def migrate_challenges():
         
         try:
             # Check if slug column exists
-            result = db.engine.execute("PRAGMA table_info(challenges)")
-            columns = [row[1] for row in result]
+            with db.engine.connect() as connection:
+                result = connection.execute(db.text("PRAGMA table_info(challenges)"))
+                columns = [row[1] for row in result]
             
             if 'slug' not in columns:
                 print("❌ Slug column doesn't exist in challenges table!")
