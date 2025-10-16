@@ -220,7 +220,7 @@ const Dashboard = () => {
                 {featuredChallenges.map((challenge) => (
                   <Link
                     key={challenge.id}
-                    to={`/challenge/${challenge.id}`}
+                    to={`/challenge/${challenge.slug}`}
                     className="block p-4 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors"
                   >
                     <h3 className="font-medium text-white mb-2">

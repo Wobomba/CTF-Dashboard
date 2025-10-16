@@ -247,7 +247,7 @@ const Challenges = () => {
             {challenges.map(challenge => (
               <Link
                 key={challenge.id}
-                to={`/challenge/${challenge.id}`}
+                to={`/challenge/${challenge.slug}`}
                 className={`card-hover p-6 block ${viewMode === 'list' ? 'flex items-center space-x-6' : ''}`}
               >
                 {viewMode === 'grid' ? (

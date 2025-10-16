@@ -66,8 +66,8 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
     }
   }
 
-  const viewChallenge = (challengeId) => {
-    window.open(`/challenge/${challengeId}`, '_blank')
+  const viewChallenge = (challenge) => {
+    window.open(`/challenge/${challenge.slug}`, '_blank')
   }
 
   const handleEditChallenge = (challenge) => {
@@ -232,7 +232,7 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
                     
                     <div className="flex items-center space-x-2 ml-4">
                       <button
-                        onClick={() => viewChallenge(challenge.id)}
+                        onClick={() => viewChallenge(challenge)}
                         className="btn-sm btn-secondary flex items-center"
                         title="View Challenge"
                       >
