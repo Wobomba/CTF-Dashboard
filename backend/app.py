@@ -38,6 +38,7 @@ CORS(app, origins=[
 from models.user import User
 from models.challenge import Challenge, ChallengeCategory, Submission
 from models.progress import UserProgress
+from models.password_reset import PasswordReset
 
 # Import routes
 from routes.auth import auth_bp
@@ -45,6 +46,7 @@ from routes.challenges import challenges_bp
 from routes.admin import admin_bp
 from routes.progress import progress_bp
 from routes.files import files_bp
+from routes.password_reset import password_reset_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -52,6 +54,7 @@ app.register_blueprint(challenges_bp, url_prefix='/api/challenges')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(progress_bp, url_prefix='/api/progress')
 app.register_blueprint(files_bp, url_prefix='/api/files')
+app.register_blueprint(password_reset_bp, url_prefix='/api/password-reset')
 
 @app.route('/api/health')
 def health_check():

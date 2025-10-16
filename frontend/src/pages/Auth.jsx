@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Shield, Mail, Lock, Eye, EyeOff, User, Cloud, Cpu } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -316,9 +317,9 @@ const Auth = () => {
                     </label>
                   </div>
                   <div className="text-sm">
-                    <a href="#" className="text-primary-400 hover:text-primary-300">
+                    <Link to="/forgot-password" className="text-primary-400 hover:text-primary-300">
                       Forgot your password?
-                    </a>
+                    </Link>
                   </div>
                 </div>
               )}

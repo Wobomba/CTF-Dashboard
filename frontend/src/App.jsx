@@ -4,6 +4,8 @@ import { AuthProvider } from './hooks/useAuth'
 import { useAuth } from './hooks/useAuth'
 import Navbar from './components/Navbar'
 import Auth from './pages/Auth'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import Challenges from './pages/Challenges'
@@ -63,6 +65,16 @@ const AppContent = () => {
         <Route path="/auth" element={
           <PublicRoute>
             <Auth />
+          </PublicRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        } />
+        <Route path="/reset-password" element={
+          <PublicRoute>
+            <ResetPassword />
           </PublicRoute>
         } />
         <Route path="/admin/setup" element={<AdminSetup />} />
