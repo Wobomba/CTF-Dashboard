@@ -216,8 +216,12 @@ def create_challenge():
         if not category:
             return jsonify({'error': 'Invalid category'}), 400
         
+        # Generate unique slug
+        slug = Challenge.create_unique_slug(data['title'])
+        
         challenge = Challenge(
             title=data['title'],
+            slug=slug,
             description=data['description'],
             scenario=data.get('scenario', ''),
             instructions=data['instructions'],
@@ -278,12 +282,17 @@ def update_challenge(challenge_id):
             'challenge_type', 'difficulty', 'points', 'time_limit',
             'file_attachments', 'docker_image', 'environment_url',
             'answer_type', 'correct_answer', 'answer_format', 'validation_regex',
-            'is_published', 'is_featured', 'category_id'
+            'is_published', 'is_featured', 'category_id', 'suggested_tools',
+            'questions', 'author', 'series', 'operating_system'
         ]
         
         for field in updatable_fields:
             if field in data:
                 setattr(challenge, field, data[field])
+        
+        # Update slug if title changed
+        if 'title' in data and data['title'] != challenge.title:
+            challenge.slug = Challenge.create_unique_slug(data['title'], exclude_id=challenge.id)
         
         # Set publish date if publishing for the first time
         if data.get('is_published') and not challenge.publish_date:
@@ -498,6 +507,83 @@ def toggle_user_admin(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to toggle admin status', 'details': str(e)}), 500
+
+@admin_bp.route('/challenges/<int:challenge_id>/submissions', methods=['DELETE'])
+@jwt_required()
+@require_admin()
+def clear_challenge_submissions(challenge_id):
+    """Clear all submissions for a specific challenge"""
+    try:
+        challenge = Challenge.query.get(challenge_id)
+        if not challenge:
+            return jsonify({'error': 'Challenge not found'}), 404
+        
+        # Get submission count before deletion
+        submission_count = challenge.submissions.count()
+        
+        # Delete all submissions for this challenge
+        challenge.submissions.delete()
+        
+        # Reset challenge statistics
+        challenge.total_attempts = 0
+        challenge.successful_attempts = 0
+        challenge.average_completion_time = None
+        challenge.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Successfully cleared {submission_count} submissions for challenge "{challenge.title}"',
+            'cleared_count': submission_count
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to clear submissions', 'details': str(e)}), 500
+
+@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+@require_admin()
+def delete_user(user_id):
+    """Delete a user"""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        current_user_id = int(get_jwt_identity())
+        
+        # Prevent self-deletion
+        if user.id == current_user_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 403
+        
+        # Prevent deletion of other admin users
+        if user.is_admin:
+            return jsonify({'error': 'Cannot delete admin users'}), 403
+        
+        # Get user info before deletion
+        username = user.username
+        email = user.email
+        
+        # Delete all submissions by this user
+        Submission.query.filter_by(user_id=user_id).delete()
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Successfully deleted user "{username}" ({email})',
+            'deleted_user': {
+                'id': user_id,
+                'username': username,
+                'email': email
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete user', 'details': str(e)}), 500
 
 def calculate_category_success_rate(category):
     """Calculate overall success rate for a category"""

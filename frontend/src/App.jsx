@@ -60,7 +60,11 @@ const AppContent = () => {
   if (!user) {
     return (
       <Routes>
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth" element={
+          <PublicRoute>
+            <Auth />
+          </PublicRoute>
+        } />
         <Route path="/admin/setup" element={<AdminSetup />} />
         <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
@@ -77,7 +81,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/challenges" element={<Challenges />} />
-          <Route path="/challenge/:id" element={<ChallengeDetail />} />
+          <Route path="/challenge/:slug" element={<ChallengeDetail />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
           

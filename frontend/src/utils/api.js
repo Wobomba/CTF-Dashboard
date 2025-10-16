@@ -2,14 +2,14 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 
-// Determine API base URL - FORCE HTTP to avoid mixed content issues
+// Determine API base URL - ALWAYS FORCE HTTP to avoid mixed content issues
 const getApiBaseUrl = () => {
-  // If VITE_API_URL is set, use it (this should be set in production)
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
+  // ALWAYS use HTTP for cyberlab.renu.ac.ug to avoid mixed content issues
+  if (window.location.hostname === 'cyberlab.renu.ac.ug') {
+    return 'http://cyberlab.renu.ac.ug/api'
   }
   
-  // Force HTTP for production to avoid mixed content issues
+  // Force HTTP for any production domain to avoid mixed content issues
   if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     return `http://${window.location.host}/api`
   }
@@ -120,11 +120,27 @@ export const adminAPI = {
   createChallenge: (challengeData) => api.post('/admin/challenges', challengeData),
   updateChallenge: (id, challengeData) => api.put(`/admin/challenges/${id}`, challengeData),
   deleteChallenge: (id) => api.delete(`/admin/challenges/${id}`),
+  clearChallengeSubmissions: (id) => api.delete(`/admin/challenges/${id}/submissions`),
   getAllChallenges: (params = {}) => api.get('/admin/challenges', { params }),
   getAllUsers: (params = {}) => api.get('/admin/users', { params }),
   toggleUserActive: (userId) => api.post(`/admin/users/${userId}/toggle-active`),
   toggleUserAdmin: (userId) => api.post(`/admin/users/${userId}/toggle-admin`),
   createUser: (userData) => api.post('/admin/users', userData),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+}
+
+// Files API
+export const filesAPI = {
+  uploadFile: (formData) => api.post('/files/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+  downloadFile: (filename) => api.get(`/files/download/${filename}`, {
+    responseType: 'blob',
+  }),
+  listFiles: () => api.get('/files/list'),
+  deleteFile: (filename) => api.delete(`/files/delete/${filename}`),
 }
 
 

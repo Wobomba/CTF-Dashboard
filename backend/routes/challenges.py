@@ -82,12 +82,16 @@ def get_challenges():
     except Exception as e:
         return jsonify({'error': 'Failed to fetch challenges', 'details': str(e)}), 500
 
-@challenges_bp.route('/<int:challenge_id>', methods=['GET'])
+@challenges_bp.route('/<challenge_identifier>', methods=['GET'])
 @jwt_required(optional=True)
-def get_challenge(challenge_id):
+def get_challenge(challenge_identifier):
     """Get a specific challenge with user progress if authenticated"""
     try:
-        challenge = Challenge.query.filter_by(id=challenge_id, is_published=True).first()
+        # Try to find by slug first, then by ID
+        if challenge_identifier.isdigit():
+            challenge = Challenge.query.filter_by(id=int(challenge_identifier), is_published=True).first()
+        else:
+            challenge = Challenge.query.filter_by(slug=challenge_identifier, is_published=True).first()
         
         if not challenge:
             return jsonify({'error': 'Challenge not found'}), 404
@@ -100,7 +104,7 @@ def get_challenge(challenge_id):
             user_id = int(user_identity)
             progress = UserProgress.query.filter_by(
                 user_id=user_id,
-                challenge_id=challenge_id
+                challenge_id=challenge.id
             ).first()
             
             challenge_data['user_progress'] = progress.to_dict() if progress else None
@@ -108,7 +112,7 @@ def get_challenge(challenge_id):
             # Check if user has already completed this challenge
             completed_submission = Submission.query.filter_by(
                 user_id=user_id,
-                challenge_id=challenge_id,
+                challenge_id=challenge.id,
                 is_correct=True
             ).first()
             
@@ -119,28 +123,31 @@ def get_challenge(challenge_id):
     except Exception as e:
         return jsonify({'error': 'Failed to fetch challenge', 'details': str(e)}), 500
 
-@challenges_bp.route('/<int:challenge_id>/start', methods=['POST'])
+@challenges_bp.route('/<challenge_identifier>/start', methods=['POST'])
 @jwt_required()
-def start_challenge(challenge_id):
+def start_challenge(challenge_identifier):
     """Start a challenge (track user progress)"""
     try:
         user_id = int(get_jwt_identity())
         
-        # Verify challenge exists and is published
-        challenge = Challenge.query.filter_by(id=challenge_id, is_published=True).first()
+        # Try to find by slug first, then by ID
+        if challenge_identifier.isdigit():
+            challenge = Challenge.query.filter_by(id=int(challenge_identifier), is_published=True).first()
+        else:
+            challenge = Challenge.query.filter_by(slug=challenge_identifier, is_published=True).first()
         if not challenge:
             return jsonify({'error': 'Challenge not found'}), 404
         
         # Get or create progress record
         progress = UserProgress.query.filter_by(
             user_id=user_id,
-            challenge_id=challenge_id
+            challenge_id=challenge.id
         ).first()
         
         if not progress:
             progress = UserProgress(
                 user_id=user_id,
-                challenge_id=challenge_id,
+                challenge_id=challenge.id,
                 status='in_progress',
                 started_at=datetime.utcnow(),
                 last_accessed=datetime.utcnow()

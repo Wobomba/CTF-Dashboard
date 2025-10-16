@@ -3,7 +3,7 @@ import { Trophy, Clock, Target, User, TrendingUp, Users } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { challengesAPI } from '../utils/api'
 
-const ChallengeLeaderboard = ({ challengeId }) => {
+const ChallengeLeaderboard = ({ challengeSlug }) => {
   const [leaderboard, setLeaderboard] = useState([])
   const [timeline, setTimeline] = useState([])
   const [totalCompletions, setTotalCompletions] = useState(0)
@@ -17,7 +17,7 @@ const ChallengeLeaderboard = ({ challengeId }) => {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true)
-        const response = await challengesAPI.getChallengeLeaderboard(challengeId)
+        const response = await challengesAPI.getChallengeLeaderboard(challengeSlug)
         setLeaderboard(response.data.leaderboard || [])
         setTimeline(response.data.timeline || [])
         setTotalCompletions(response.data.total_completions || 0)
@@ -31,10 +31,10 @@ const ChallengeLeaderboard = ({ challengeId }) => {
       }
     }
 
-    if (challengeId) {
+    if (challengeSlug) {
       fetchLeaderboard()
     }
-  }, [challengeId])
+  }, [challengeSlug])
 
   const getRankIcon = (rank) => {
     switch (rank) {

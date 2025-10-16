@@ -18,13 +18,13 @@ import {
   Settings,
   Trash2
 } from 'lucide-react'
-import { challengesAPI, progressAPI, adminAPI } from '../utils/api'
+import { challengesAPI, progressAPI, adminAPI, filesAPI } from '../utils/api'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 import ChallengeLeaderboard from '../components/ChallengeLeaderboard'
 
 const ChallengeDetail = () => {
-  const { id } = useParams()
+  const { slug } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [challenge, setChallenge] = useState(null)
@@ -41,12 +41,12 @@ const ChallengeDetail = () => {
   useEffect(() => {
     fetchChallenge()
     fetchRecentSolves()
-  }, [id])
+  }, [slug])
 
   const fetchChallenge = async () => {
     try {
       setLoading(true)
-      const response = await challengesAPI.getChallenge(id)
+      const response = await challengesAPI.getChallenge(slug)
       setChallenge(response.data.challenge)
       
       // Check if user has an existing submission
@@ -87,7 +87,7 @@ const ChallengeDetail = () => {
 
   const fetchRecentSolves = async () => {
     try {
-      const response = await challengesAPI.getRecentSolves(id)
+      const response = await challengesAPI.getRecentSolves(slug)
       setRecentSolves(response.data.recent_solves || [])
     } catch (error) {
       console.error('Failed to fetch recent solves:', error)
@@ -102,7 +102,7 @@ const ChallengeDetail = () => {
     }
 
     try {
-      await adminAPI.deleteChallenge(id)
+      await adminAPI.deleteChallenge(challenge.id)
       toast.success('Challenge deleted successfully')
       navigate('/admin')
     } catch (error) {
@@ -139,7 +139,7 @@ const ChallengeDetail = () => {
         answer: JSON.stringify({ [questionKey]: answer }),
         question_key: questionKey
       }
-      const response = await challengesAPI.submitAnswer(id, submissionData)
+      const response = await challengesAPI.submitAnswer(slug, submissionData)
       
       // Update question submission state
       setQuestionSubmissions(prev => ({
@@ -182,11 +182,33 @@ const ChallengeDetail = () => {
     if (usedHints.includes(hintIndex)) return
     
     try {
-      await progressAPI.useHint(id, hintIndex)
+      await progressAPI.useHint(slug, hintIndex)
       setUsedHints([...usedHints, hintIndex])
       toast.info('Hint revealed!')
     } catch (error) {
       toast.error('Failed to get hint')
+    }
+  }
+
+  const handleFileDownload = async (filename, originalName) => {
+    try {
+      const response = await filesAPI.downloadFile(filename)
+      
+      // Create blob and download
+      const blob = new Blob([response.data])
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = originalName || filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('File downloaded successfully')
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      toast.error('Failed to download file')
     }
   }
 
@@ -251,7 +273,7 @@ const ChallengeDetail = () => {
 
   
   const tools = challenge?.suggested_tools?.map(toolName => {
-    
+    console.log('Processing tool:', toolName)
     const iconMap = {
       'grep': '🔍', 'wireshark': '🦈', 'excel': '📊', 'text editor': '📝',
       'notepad': '📝', 'vim': '📝', 'nano': '📝', 'burp suite': '🛡️',
@@ -261,6 +283,9 @@ const ChallengeDetail = () => {
     const icon = iconMap[toolName.toLowerCase()] || '🔧'
     return { name: toolName, icon }
   }) || []
+
+  console.log('Challenge suggested_tools:', challenge?.suggested_tools)
+  console.log('Processed tools:', tools)
 
   const files = challenge?.file_attachments || []
 
@@ -354,12 +379,18 @@ const ChallengeDetail = () => {
               <div className="bg-gray-800 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Suggested Tools</h3>
                 <div className="space-y-2">
-                  {tools.map((tool, index) => (
-                    <div key={index} className="flex items-center p-2 bg-gray-700/30 rounded-lg">
-                      <span className="text-lg mr-3">{tool.icon}</span>
-                      <span className="text-gray-300">{tool.name}</span>
+                  {tools.length > 0 ? (
+                    tools.map((tool, index) => (
+                      <div key={index} className="flex items-center p-2 bg-gray-700/30 rounded-lg">
+                        <span className="text-lg mr-3">{tool.icon}</span>
+                        <span className="text-gray-300">{tool.name}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-400 text-sm italic">
+                      No suggested tools for this challenge
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -428,7 +459,7 @@ const ChallengeDetail = () => {
             <div className="space-y-6">
 
               {/* Challenge Leaderboard */}
-              <ChallengeLeaderboard challengeId={id} />
+              <ChallengeLeaderboard challengeSlug={slug} />
 
               {/* Scenario */}
               <div className="bg-gray-800 rounded-lg p-6">
@@ -480,7 +511,10 @@ const ChallengeDetail = () => {
                               </div>
                             </div>
                           </div>
-                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-base flex items-center justify-center transition-colors duration-200 lg:flex-shrink-0">
+                          <button 
+                            onClick={() => handleFileDownload(file.filename, file.name)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-base flex items-center justify-center transition-colors duration-200 lg:flex-shrink-0"
+                          >
                             <Download className="h-5 w-5 mr-3" />
                             Download File
                           </button>
