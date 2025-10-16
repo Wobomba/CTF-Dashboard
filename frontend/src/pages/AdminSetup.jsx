@@ -7,9 +7,7 @@ import toast from 'react-hot-toast'
 const AdminSetup = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [setupAttempts, setSetupAttempts] = useState(0)
-  const [isBlocked, setIsBlocked] = useState(false)
-  const [csrfToken, setCsrfToken] = useState('')
+  // Security features removed for simplified deployment
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -22,46 +20,21 @@ const AdminSetup = () => {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    // Check if admin already exists and get CSRF token
+    // Check if admin already exists
     const checkAdminSetup = async () => {
       try {
         const response = await adminAPI.checkSetup()
         if (!response.data.setup_required) {
           // Admin already exists, redirect to auth
           navigate('/auth')
-        } else {
-          // Store CSRF token for setup
-          if (response.data.csrf_token) {
-            setCsrfToken(response.data.csrf_token)
-          }
         }
       } catch (error) {
         console.error('Error checking admin setup:', error)
-        toast.error('Failed to check admin setup status')
+        // Continue anyway - don't block setup
       }
     }
 
-    // Security: Check for suspicious patterns
-    const userAgent = navigator.userAgent.toLowerCase()
-    const suspiciousPatterns = [
-      'gobuster', 'dirb', 'dirbuster', 'wfuzz', 'burp', 'nikto', 'nmap',
-      'sqlmap', 'w3af', 'zap', 'scanner', 'crawler', 'bot', 'spider',
-      'python-requests', 'curl', 'wget', 'postman'
-    ]
-    
-    const isSuspicious = suspiciousPatterns.some(pattern => 
-      userAgent.includes(pattern)
-    )
-    
-    if (isSuspicious) {
-      console.warn('Suspicious user agent detected:', userAgent)
-      // Add delay and additional checks
-      setTimeout(() => {
-        checkAdminSetup()
-      }, 2000)
-    } else {
-      checkAdminSetup()
-    }
+    checkAdminSetup()
   }, [navigate])
 
   const handleInputChange = (e) => {
@@ -83,11 +56,9 @@ const AdminSetup = () => {
   const validateForm = () => {
     const newErrors = {}
 
-    // Required fields
+    // Basic validation only
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required'
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters'
     }
 
     if (!formData.email.trim()) {
@@ -98,20 +69,8 @@ const AdminSetup = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required'
-    } else {
-      // Enhanced password strength validation
-      const password = formData.password
-      if (password.length < 12) {
-        newErrors.password = 'Password must be at least 12 characters long'
-      } else if (!/[A-Z]/.test(password)) {
-        newErrors.password = 'Password must contain at least one uppercase letter'
-      } else if (!/[a-z]/.test(password)) {
-        newErrors.password = 'Password must contain at least one lowercase letter'
-      } else if (!/[0-9]/.test(password)) {
-        newErrors.password = 'Password must contain at least one number'
-      } else if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) {
-        newErrors.password = 'Password must contain at least one special character'
-      }
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
     }
 
     if (!formData.confirmPassword) {
@@ -135,36 +94,16 @@ const AdminSetup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Security: Rate limiting
-    if (isBlocked) {
-      toast.error('Too many attempts. Please wait before trying again.')
-      return
-    }
-    
-    if (setupAttempts >= 3) {
-      setIsBlocked(true)
-      toast.error('Too many setup attempts. Please wait before trying again.')
-      setTimeout(() => {
-        setIsBlocked(false)
-        setSetupAttempts(0)
-      }, 5 * 60 * 1000) 
-      return
-    }
-    
     if (!validateForm()) {
       return
     }
 
     setLoading(true)
-    setSetupAttempts(prev => prev + 1)
     
     try {
       const { confirmPassword, ...adminData } = formData
-      // Include CSRF token in the request
-      const response = await adminAPI.setupAdmin({
-        ...adminData,
-        csrf_token: csrfToken
-      })
+      // Simplified request without CSRF token
+      const response = await adminAPI.setupAdmin(adminData)
       
       // Store the auth token
       setAuthToken(response.data.access_token)
@@ -356,14 +295,10 @@ const AdminSetup = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || isBlocked}
-              className={`w-full py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 ${
-                isBlocked 
-                  ? 'bg-red-500 text-white cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
-              }`}
+              disabled={loading}
+              className="w-full py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : isBlocked ? 'Too Many Attempts - Try Again Later' : 'Create Admin Account'}
+              {loading ? 'Creating Account...' : 'Create Admin Account'}
             </button>
           </form>
 

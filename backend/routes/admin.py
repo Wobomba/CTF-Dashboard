@@ -8,13 +8,7 @@ import os
 from database import db
 from models.user import User
 from models.challenge import Challenge, ChallengeCategory, Submission
-from security.admin_setup_security import (
-    secure_admin_setup_required, 
-    secure_admin_setup_check_required,
-    generate_csrf_token,
-    validate_password_strength,
-    log_security_event
-)
+# Security imports removed for simplified deployment
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -32,67 +26,33 @@ def require_admin():
     return decorator
 
 @admin_bp.route('/setup/check', methods=['GET'])
-@secure_admin_setup_check_required
 def check_admin_setup():
-    """Check if admin account exists - Secured endpoint"""
+    """Check if admin account exists - Simplified endpoint"""
     try:
         admin_exists = User.query.filter_by(is_admin=True).first() is not None
         
-        # Generate CSRF token for setup if needed
-        csrf_token = None
-        if not admin_exists:
-            csrf_token = generate_csrf_token()
-            session['csrf_token'] = csrf_token
-            session['setup_started'] = datetime.utcnow().isoformat()
-        
         return jsonify({
             'admin_exists': admin_exists,
-            'setup_required': not admin_exists,
-            'csrf_token': csrf_token
+            'setup_required': not admin_exists
         }), 200
     except Exception as e:
-        log_security_event('SETUP_CHECK_ERROR', request.remote_addr, {'error': str(e)})
         return jsonify({'error': 'Failed to check admin setup'}), 500
 
 @admin_bp.route('/setup', methods=['POST'])
-@secure_admin_setup_required
 def setup_admin():
-    """Create the first admin account - Highly secured endpoint"""
+    """Create the first admin account - Simplified endpoint"""
     try:
         # Check if any admin already exists
         if User.query.filter_by(is_admin=True).first():
-            log_security_event('ADMIN_ALREADY_EXISTS', request.remote_addr)
             return jsonify({'error': 'Admin account already exists'}), 400
         
         data = request.get_json()
         
-        # Validate required fields
-        required_fields = ['username', 'email', 'password', 'first_name', 'last_name', 'csrf_token']
+        # Basic validation only
+        required_fields = ['username', 'email', 'password', 'first_name', 'last_name']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field} is required'}), 400
-        
-        # Validate email format with stricter regex
-        import re
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(email_pattern, data['email']):
-            return jsonify({'error': 'Invalid email format'}), 400
-        
-        # Enhanced password strength validation
-        password = data['password']
-        is_strong, strength_message = validate_password_strength(password)
-        if not is_strong:
-            return jsonify({'error': strength_message}), 400
-        
-        # Additional security checks
-        if len(data['username']) < 3 or len(data['username']) > 30:
-            return jsonify({'error': 'Username must be between 3 and 30 characters'}), 400
-        
-        if len(data['first_name']) < 1 or len(data['first_name']) > 50:
-            return jsonify({'error': 'First name must be between 1 and 50 characters'}), 400
-        
-        if len(data['last_name']) < 1 or len(data['last_name']) > 50:
-            return jsonify({'error': 'Last name must be between 1 and 50 characters'}), 400
         
         # Check if email is already taken
         if User.query.filter_by(email=data['email']).first():
@@ -102,21 +62,17 @@ def setup_admin():
         if User.query.filter_by(username=data['username']).first():
             return jsonify({'error': 'Username already taken'}), 400
         
-        # Validate username format (alphanumeric and underscores only)
-        if not re.match(r'^[a-zA-Z0-9_]+$', data['username']):
-            return jsonify({'error': 'Username can only contain letters, numbers, and underscores'}), 400
-        
-        # Create admin user with additional security fields
+        # Create admin user
         admin_user = User(
             username=data['username'],
             email=data['email'],
-            password_hash=generate_password_hash(password),
+            password_hash=generate_password_hash(data['password']),
             first_name=data['first_name'],
             last_name=data['last_name'],
             bio=data.get('bio', ''),
             is_admin=True,
             is_active=True,
-            is_verified=True,  # Auto-verify admin account
+            is_verified=True,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )
@@ -124,18 +80,8 @@ def setup_admin():
         db.session.add(admin_user)
         db.session.commit()
         
-        # Clear setup session
-        session.pop('csrf_token', None)
-        session.pop('setup_started', None)
-        
         # Create access token for immediate login
         access_token = create_access_token(identity=admin_user.id)
-        
-        # Log successful admin creation
-        log_security_event('ADMIN_CREATED', request.remote_addr, {
-            'username': data['username'],
-            'email': data['email']
-        })
         
         return jsonify({
             'message': 'Admin account created successfully',
@@ -145,7 +91,6 @@ def setup_admin():
         
     except Exception as e:
         db.session.rollback()
-        log_security_event('ADMIN_SETUP_ERROR', request.remote_addr, {'error': str(e)})
         return jsonify({'error': 'Failed to create admin account'}), 500
 
 @admin_bp.route('/dashboard', methods=['GET'])
