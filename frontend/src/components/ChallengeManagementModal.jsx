@@ -14,7 +14,8 @@ import {
   Users,
   AlertTriangle,
   ExternalLink,
-  Edit
+  Edit,
+  RotateCcw
 } from 'lucide-react'
 
 const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
@@ -76,6 +77,25 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
   const handleEditSuccess = () => {
     fetchChallenges()
     onSuccess()
+  }
+
+  const handleClearSubmissions = async (challenge) => {
+    const confirmMessage = `Are you sure you want to clear all ${challenge.total_attempts} submission(s) for "${challenge.title}"? This action cannot be undone and will reset the challenge statistics.`
+
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    try {
+      await adminAPI.clearChallengeSubmissions(challenge.id)
+      toast.success(`Successfully cleared ${challenge.total_attempts} submissions`)
+      fetchChallenges()
+      onSuccess()
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Failed to clear submissions'
+      toast.error(errorMessage)
+      console.error('Error clearing submissions:', error)
+    }
   }
 
   const getDifficultyColor = (difficulty) => {
@@ -227,6 +247,16 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </button>
+                      {challenge.total_attempts > 0 && (
+                        <button
+                          onClick={() => handleClearSubmissions(challenge)}
+                          className="btn-sm btn-warning flex items-center"
+                          title="Clear All Submissions"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Clear
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDeleteChallenge(challenge)}
                         className="btn-sm btn-danger flex items-center"

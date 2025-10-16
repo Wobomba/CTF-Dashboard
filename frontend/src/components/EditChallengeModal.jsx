@@ -280,7 +280,7 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                className={`input-primary ${errors.title ? 'border-red-500' : ''}`}
+                className={`input-primary w-full ${errors.title ? 'border-red-500' : ''}`}
                 placeholder="Challenge title"
               />
               {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title}</p>}
@@ -294,7 +294,7 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
                 name="category_id"
                 value={formData.category_id}
                 onChange={handleInputChange}
-                className={`input-primary ${errors.category_id ? 'border-red-500' : ''}`}
+                className={`input-primary w-full ${errors.category_id ? 'border-red-500' : ''}`}
               >
                 <option value="">Select a category</option>
                 {categories.map(category => (
@@ -307,6 +307,159 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
             </div>
           </div>
 
+          {/* Challenge Configuration */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Challenge Type
+              </label>
+              <select
+                name="challenge_type"
+                value={formData.challenge_type}
+                onChange={handleInputChange}
+                className="input-primary w-full"
+              >
+                <option value="investigation">Investigation</option>
+                <option value="forensics">Forensics</option>
+                <option value="cryptography">Cryptography</option>
+                <option value="web">Web Security</option>
+                <option value="network">Network Security</option>
+                <option value="reverse">Reverse Engineering</option>
+                <option value="pwn">Binary Exploitation</option>
+                <option value="misc">Miscellaneous</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Difficulty
+              </label>
+              <select
+                name="difficulty"
+                value={formData.difficulty}
+                onChange={handleInputChange}
+                className="input-primary w-full"
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+                <option value="expert">Expert</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Points
+              </label>
+              <input
+                type="number"
+                name="points"
+                value={formData.points}
+                onChange={handleInputChange}
+                min="1"
+                max="1000"
+                className="input-primary w-full"
+                placeholder="100"
+              />
+            </div>
+          </div>
+
+          {/* Additional Configuration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Author
+              </label>
+              <input
+                type="text"
+                name="author"
+                value={formData.author}
+                onChange={handleInputChange}
+                className="input-primary w-full"
+                placeholder="Your name or organization"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Series
+              </label>
+              <input
+                type="text"
+                name="series"
+                value={formData.series}
+                onChange={handleInputChange}
+                className="input-primary w-full"
+                placeholder="e.g., Web Security Fundamentals"
+              />
+            </div>
+          </div>
+
+          {/* Time Limit and OS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Time Limit (minutes)
+              </label>
+              <input
+                type="number"
+                name="time_limit"
+                value={formData.time_limit}
+                onChange={handleInputChange}
+                className="input-primary w-full"
+                placeholder="Optional time limit"
+                min="1"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                Operating System
+              </label>
+              <select
+                name="operating_system"
+                value={formData.operating_system}
+                onChange={handleInputChange}
+                className="input-primary w-full"
+              >
+                <option value="">Select OS</option>
+                <option value="linux">Linux</option>
+                <option value="windows">Windows</option>
+                <option value="macos">macOS</option>
+                <option value="any">Any</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Publishing Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="is_published"
+                  checked={formData.is_published}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_published: e.target.checked }))}
+                  className="mr-2"
+                />
+                <span className="text-white">Published</span>
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="is_featured"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
+                  className="mr-2"
+                />
+                <span className="text-white">Featured</span>
+              </label>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-white mb-2">
               Description *
@@ -316,10 +469,24 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
               value={formData.description}
               onChange={handleInputChange}
               rows={3}
-              className={`input-primary ${errors.description ? 'border-red-500' : ''}`}
+              className={`input-primary w-full ${errors.description ? 'border-red-500' : ''}`}
               placeholder="Brief description of the challenge"
             />
             {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Scenario
+            </label>
+            <textarea
+              name="scenario"
+              value={formData.scenario}
+              onChange={handleInputChange}
+              rows={4}
+              className="input-primary w-full"
+              placeholder="Describe the compromise or situation that occurred - this explains what the challenge is about"
+            />
           </div>
 
           <div>
@@ -330,9 +497,9 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
               name="instructions"
               value={formData.instructions}
               onChange={handleInputChange}
-              rows={4}
-              className={`input-primary ${errors.instructions ? 'border-red-500' : ''}`}
-              placeholder="Detailed instructions for participants"
+              rows={5}
+              className={`input-primary w-full ${errors.instructions ? 'border-red-500' : ''}`}
+              placeholder="Detailed instructions for solving the challenge"
             />
             {errors.instructions && <p className="text-red-400 text-sm mt-1">{errors.instructions}</p>}
           </div>
@@ -401,66 +568,84 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
             </div>
             
             {formData.questions.map((question, index) => (
-              <div key={question.id} className="bg-gray-700 p-4 rounded-lg mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-white font-medium">Question {index + 1}</h4>
+              <div key={question.id} className="bg-gray-700/50 border border-gray-600 rounded-lg p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-white font-semibold text-lg">Question {index + 1}</h4>
                   {formData.questions.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeQuestion(index)}
-                      className="text-red-400 hover:text-red-300"
+                      className="text-red-400 hover:text-red-300 p-1"
+                      title="Remove Question"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-5 w-5" />
                     </button>
                   )}
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-white mb-1">
+                    <label className="block text-sm font-medium text-white mb-2">
                       Question Text *
                     </label>
                     <textarea
                       value={question.question}
                       onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
-                      className={`input-primary ${errors[`question_${index}`] ? 'border-red-500' : ''}`}
+                      className={`input-primary w-full ${errors[`question_${index}`] ? 'border-red-500' : ''}`}
                       rows={2}
-                      placeholder="Enter the question"
+                      placeholder="What is the question you want to ask?"
                     />
                     {errors[`question_${index}`] && (
                       <p className="text-red-400 text-sm mt-1">{errors[`question_${index}`]}</p>
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-white mb-1">
-                        Correct Answer *
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Answer Format
                       </label>
-                      <input
-                        type="text"
-                        value={question.correct_answer}
-                        onChange={(e) => handleQuestionChange(index, 'correct_answer', e.target.value)}
-                        className={`input-primary ${errors[`answer_${index}`] ? 'border-red-500' : ''}`}
-                        placeholder="Correct answer"
-                      />
-                      {errors[`answer_${index}`] && (
-                        <p className="text-red-400 text-sm mt-1">{errors[`answer_${index}`]}</p>
-                      )}
+                      <select
+                        value={question.answer_format}
+                        onChange={(e) => handleQuestionChange(index, 'answer_format', e.target.value)}
+                        className="input-primary w-full"
+                      >
+                        <option value="text">Text</option>
+                        <option value="number">Number</option>
+                        <option value="flag">Flag</option>
+                        <option value="file">File Upload</option>
+                      </select>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-white mb-1">
+                      <label className="block text-sm font-medium text-white mb-2">
                         Points
                       </label>
                       <input
                         type="number"
                         value={question.points}
                         onChange={(e) => handleQuestionChange(index, 'points', parseInt(e.target.value) || 0)}
-                        className="input-primary"
+                        className="input-primary w-full"
                         min="1"
                         max="100"
+                        placeholder="10"
                       />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Correct Answer *
+                      </label>
+                      <input
+                        type="text"
+                        value={question.correct_answer}
+                        onChange={(e) => handleQuestionChange(index, 'correct_answer', e.target.value)}
+                        className={`input-primary w-full ${errors[`answer_${index}`] ? 'border-red-500' : ''}`}
+                        placeholder="The correct answer"
+                      />
+                      {errors[`answer_${index}`] && (
+                        <p className="text-red-400 text-sm mt-1">{errors[`answer_${index}`]}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -470,6 +655,86 @@ const EditChallengeModal = ({ isOpen, onClose, onSuccess, challenge }) => {
             {errors.questions && (
               <p className="text-red-400 text-sm mt-1">{errors.questions}</p>
             )}
+          </div>
+
+          {/* Hints */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-white">
+                General Hints
+              </label>
+              <button
+                type="button"
+                onClick={() => addArrayItem('hints')}
+                className="btn-sm btn-secondary flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Hint
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {formData.hints.map((hint, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    value={hint}
+                    onChange={(e) => handleArrayInputChange('hints', index, e.target.value)}
+                    className="input-primary flex-1"
+                    placeholder={`Hint ${index + 1}`}
+                  />
+                  {formData.hints.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem('hints', index)}
+                      className="text-red-400 hover:text-red-300 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Suggested Tools */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-white">
+                Suggested Tools
+              </label>
+              <button
+                type="button"
+                onClick={() => addArrayItem('suggested_tools')}
+                className="btn-sm btn-secondary flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Tool
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {formData.suggested_tools.map((tool, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    value={tool}
+                    onChange={(e) => handleArrayInputChange('suggested_tools', index, e.target.value)}
+                    className="input-primary flex-1"
+                    placeholder={`Tool ${index + 1} (e.g., Wireshark, Grep, Excel)`}
+                  />
+                  {formData.suggested_tools.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem('suggested_tools', index)}
+                      className="text-red-400 hover:text-red-300 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Submit Buttons */}

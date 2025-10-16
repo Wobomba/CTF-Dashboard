@@ -499,6 +499,39 @@ def toggle_user_admin(user_id):
         db.session.rollback()
         return jsonify({'error': 'Failed to toggle admin status', 'details': str(e)}), 500
 
+@admin_bp.route('/challenges/<int:challenge_id>/submissions', methods=['DELETE'])
+@jwt_required()
+@require_admin()
+def clear_challenge_submissions(challenge_id):
+    """Clear all submissions for a specific challenge"""
+    try:
+        challenge = Challenge.query.get(challenge_id)
+        if not challenge:
+            return jsonify({'error': 'Challenge not found'}), 404
+        
+        # Get submission count before deletion
+        submission_count = challenge.submissions.count()
+        
+        # Delete all submissions for this challenge
+        challenge.submissions.delete()
+        
+        # Reset challenge statistics
+        challenge.total_attempts = 0
+        challenge.successful_attempts = 0
+        challenge.average_completion_time = None
+        challenge.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Successfully cleared {submission_count} submissions for challenge "{challenge.title}"',
+            'cleared_count': submission_count
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to clear submissions', 'details': str(e)}), 500
+
 def calculate_category_success_rate(category):
     """Calculate overall success rate for a category"""
     total_attempts = 0

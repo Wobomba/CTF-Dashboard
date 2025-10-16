@@ -120,6 +120,7 @@ export const adminAPI = {
   createChallenge: (challengeData) => api.post('/admin/challenges', challengeData),
   updateChallenge: (id, challengeData) => api.put(`/admin/challenges/${id}`, challengeData),
   deleteChallenge: (id) => api.delete(`/admin/challenges/${id}`),
+  clearChallengeSubmissions: (id) => api.delete(`/admin/challenges/${id}/submissions`),
   getAllChallenges: (params = {}) => api.get('/admin/challenges', { params }),
   getAllUsers: (params = {}) => api.get('/admin/users', { params }),
   toggleUserActive: (userId) => api.post(`/admin/users/${userId}/toggle-active`),
