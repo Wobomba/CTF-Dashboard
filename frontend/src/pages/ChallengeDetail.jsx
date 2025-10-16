@@ -102,7 +102,7 @@ const ChallengeDetail = () => {
     }
 
     try {
-      await adminAPI.deleteChallenge(id)
+      await adminAPI.deleteChallenge(challenge.id)
       toast.success('Challenge deleted successfully')
       navigate('/admin')
     } catch (error) {
@@ -459,7 +459,7 @@ const ChallengeDetail = () => {
             <div className="space-y-6">
 
               {/* Challenge Leaderboard */}
-              <ChallengeLeaderboard challengeId={id} />
+              <ChallengeLeaderboard challengeSlug={slug} />
 
               {/* Scenario */}
               <div className="bg-gray-800 rounded-lg p-6">
