@@ -278,7 +278,8 @@ def update_challenge(challenge_id):
             'challenge_type', 'difficulty', 'points', 'time_limit',
             'file_attachments', 'docker_image', 'environment_url',
             'answer_type', 'correct_answer', 'answer_format', 'validation_regex',
-            'is_published', 'is_featured', 'category_id'
+            'is_published', 'is_featured', 'category_id', 'suggested_tools',
+            'questions', 'author', 'series', 'operating_system'
         ]
         
         for field in updatable_fields:

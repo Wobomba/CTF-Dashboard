@@ -273,7 +273,7 @@ const ChallengeDetail = () => {
 
   
   const tools = challenge?.suggested_tools?.map(toolName => {
-    
+    console.log('Processing tool:', toolName)
     const iconMap = {
       'grep': '🔍', 'wireshark': '🦈', 'excel': '📊', 'text editor': '📝',
       'notepad': '📝', 'vim': '📝', 'nano': '📝', 'burp suite': '🛡️',
@@ -283,6 +283,9 @@ const ChallengeDetail = () => {
     const icon = iconMap[toolName.toLowerCase()] || '🔧'
     return { name: toolName, icon }
   }) || []
+
+  console.log('Challenge suggested_tools:', challenge?.suggested_tools)
+  console.log('Processed tools:', tools)
 
   const files = challenge?.file_attachments || []
 
@@ -376,12 +379,18 @@ const ChallengeDetail = () => {
               <div className="bg-gray-800 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Suggested Tools</h3>
                 <div className="space-y-2">
-                  {tools.map((tool, index) => (
-                    <div key={index} className="flex items-center p-2 bg-gray-700/30 rounded-lg">
-                      <span className="text-lg mr-3">{tool.icon}</span>
-                      <span className="text-gray-300">{tool.name}</span>
+                  {tools.length > 0 ? (
+                    tools.map((tool, index) => (
+                      <div key={index} className="flex items-center p-2 bg-gray-700/30 rounded-lg">
+                        <span className="text-lg mr-3">{tool.icon}</span>
+                        <span className="text-gray-300">{tool.name}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-400 text-sm italic">
+                      No suggested tools for this challenge
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
