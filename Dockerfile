@@ -17,6 +17,7 @@ COPY . .
 # Set production environment variables for HTTP API (no mixed content issues)
 ENV VITE_API_URL=http://cyberlab.renu.ac.ug/api
 ENV VITE_NODE_ENV=production
+ENV VITE_FORCE_HTTP=true
 
 # Build the frontend
 RUN npm run build
