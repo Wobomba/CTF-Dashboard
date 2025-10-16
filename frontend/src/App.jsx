@@ -60,7 +60,11 @@ const AppContent = () => {
   if (!user) {
     return (
       <Routes>
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth" element={
+          <PublicRoute>
+            <Auth />
+          </PublicRoute>
+        } />
         <Route path="/admin/setup" element={<AdminSetup />} />
         <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
