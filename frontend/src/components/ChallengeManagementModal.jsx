@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { adminAPI } from '../utils/api'
 import toast from 'react-hot-toast'
 import LoadingSpinner from './LoadingSpinner'
+import EditChallengeModal from './EditChallengeModal'
 import { 
   Trophy, 
   Eye, 
@@ -12,7 +13,8 @@ import {
   Target, 
   Users,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Edit
 } from 'lucide-react'
 
 const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
@@ -21,6 +23,7 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all') // 'all', 'published', 'unpublished'
   const [filterDifficulty, setFilterDifficulty] = useState('all')
+  const [editingChallenge, setEditingChallenge] = useState(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -64,6 +67,15 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
 
   const viewChallenge = (challengeId) => {
     window.open(`/challenge/${challengeId}`, '_blank')
+  }
+
+  const handleEditChallenge = (challenge) => {
+    setEditingChallenge(challenge)
+  }
+
+  const handleEditSuccess = () => {
+    fetchChallenges()
+    onSuccess()
   }
 
   const getDifficultyColor = (difficulty) => {
@@ -208,6 +220,14 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
                         View
                       </button>
                       <button
+                        onClick={() => handleEditChallenge(challenge)}
+                        className="btn-sm btn-primary flex items-center"
+                        title="Edit Challenge"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleDeleteChallenge(challenge)}
                         className="btn-sm btn-danger flex items-center"
                         title="Delete Challenge"
@@ -239,6 +259,14 @@ const ChallengeManagementModal = ({ isOpen, onClose, onSuccess }) => {
         </div>
         </div>
       </div>
+      
+      {/* Edit Challenge Modal */}
+      <EditChallengeModal
+        isOpen={!!editingChallenge}
+        onClose={() => setEditingChallenge(null)}
+        onSuccess={handleEditSuccess}
+        challenge={editingChallenge}
+      />
     </div>
   )
 }
