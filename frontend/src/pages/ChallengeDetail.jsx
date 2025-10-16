@@ -24,7 +24,7 @@ import toast from 'react-hot-toast'
 import ChallengeLeaderboard from '../components/ChallengeLeaderboard'
 
 const ChallengeDetail = () => {
-  const { id } = useParams()
+  const { slug } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [challenge, setChallenge] = useState(null)
@@ -41,12 +41,12 @@ const ChallengeDetail = () => {
   useEffect(() => {
     fetchChallenge()
     fetchRecentSolves()
-  }, [id])
+  }, [slug])
 
   const fetchChallenge = async () => {
     try {
       setLoading(true)
-      const response = await challengesAPI.getChallenge(id)
+      const response = await challengesAPI.getChallenge(slug)
       setChallenge(response.data.challenge)
       
       // Check if user has an existing submission
@@ -87,7 +87,7 @@ const ChallengeDetail = () => {
 
   const fetchRecentSolves = async () => {
     try {
-      const response = await challengesAPI.getRecentSolves(id)
+      const response = await challengesAPI.getRecentSolves(slug)
       setRecentSolves(response.data.recent_solves || [])
     } catch (error) {
       console.error('Failed to fetch recent solves:', error)
@@ -139,7 +139,7 @@ const ChallengeDetail = () => {
         answer: JSON.stringify({ [questionKey]: answer }),
         question_key: questionKey
       }
-      const response = await challengesAPI.submitAnswer(id, submissionData)
+      const response = await challengesAPI.submitAnswer(slug, submissionData)
       
       // Update question submission state
       setQuestionSubmissions(prev => ({
@@ -182,7 +182,7 @@ const ChallengeDetail = () => {
     if (usedHints.includes(hintIndex)) return
     
     try {
-      await progressAPI.useHint(id, hintIndex)
+      await progressAPI.useHint(slug, hintIndex)
       setUsedHints([...usedHints, hintIndex])
       toast.info('Hint revealed!')
     } catch (error) {

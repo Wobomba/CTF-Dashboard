@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 from database import db
 
 class ChallengeCategory(db.Model):
@@ -32,6 +33,7 @@ class Challenge(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
+    slug = db.Column(db.String(250), unique=True, nullable=False)
     description = db.Column(db.Text, nullable=False)
     
     # Challenge content
@@ -85,11 +87,39 @@ class Challenge(db.Model):
     def __repr__(self):
         return f'<Challenge {self.title}>'
     
+    @staticmethod
+    def generate_slug(title):
+        """Generate a URL-friendly slug from a title"""
+        # Convert to lowercase and replace spaces with hyphens
+        slug = re.sub(r'[^\w\s-]', '', title.lower())
+        slug = re.sub(r'[-\s]+', '-', slug)
+        slug = slug.strip('-')
+        return slug
+    
+    @classmethod
+    def create_unique_slug(cls, title, exclude_id=None):
+        """Create a unique slug, appending numbers if necessary"""
+        base_slug = cls.generate_slug(title)
+        slug = base_slug
+        counter = 1
+        
+        while True:
+            query = cls.query.filter_by(slug=slug)
+            if exclude_id:
+                query = query.filter(cls.id != exclude_id)
+            
+            if not query.first():
+                return slug
+            
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+    
     def to_dict(self, include_sensitive=False):
         """Convert challenge to dictionary"""
         data = {
             'id': self.id,
             'title': self.title,
+            'slug': self.slug,
             'description': self.description,
             'scenario': self.scenario,
             'instructions': self.instructions,

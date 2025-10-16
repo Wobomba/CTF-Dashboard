@@ -216,8 +216,12 @@ def create_challenge():
         if not category:
             return jsonify({'error': 'Invalid category'}), 400
         
+        # Generate unique slug
+        slug = Challenge.create_unique_slug(data['title'])
+        
         challenge = Challenge(
             title=data['title'],
+            slug=slug,
             description=data['description'],
             scenario=data.get('scenario', ''),
             instructions=data['instructions'],
@@ -285,6 +289,10 @@ def update_challenge(challenge_id):
         for field in updatable_fields:
             if field in data:
                 setattr(challenge, field, data[field])
+        
+        # Update slug if title changed
+        if 'title' in data and data['title'] != challenge.title:
+            challenge.slug = Challenge.create_unique_slug(data['title'], exclude_id=challenge.id)
         
         # Set publish date if publishing for the first time
         if data.get('is_published') and not challenge.publish_date:
