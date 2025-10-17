@@ -417,15 +417,19 @@ def submit_answer(challenge_identifier):
         db.session.rollback()
         return jsonify({'error': 'Failed to submit answer', 'details': str(e)}), 500
 
-@challenges_bp.route('/<int:challenge_id>/hint', methods=['POST'])
+@challenges_bp.route('/<challenge_identifier>/hint', methods=['POST'])
 @jwt_required()
-def get_hint(challenge_id):
+def get_hint(challenge_identifier):
     """Get the next available hint for a challenge"""
     try:
         user_id = int(get_jwt_identity())
         
-        # Verify challenge exists
-        challenge = Challenge.query.filter_by(id=challenge_id, is_published=True).first()
+        # Try to find by slug first, then by ID
+        if challenge_identifier.isdigit():
+            challenge = Challenge.query.filter_by(id=int(challenge_identifier), is_published=True).first()
+        else:
+            challenge = Challenge.query.filter_by(slug=challenge_identifier, is_published=True).first()
+        
         if not challenge:
             return jsonify({'error': 'Challenge not found'}), 404
         
@@ -435,7 +439,7 @@ def get_hint(challenge_id):
         # Get user progress
         progress = UserProgress.query.filter_by(
             user_id=user_id,
-            challenge_id=challenge_id
+            challenge_id=challenge.id
         ).first()
         
         if not progress:
@@ -444,7 +448,7 @@ def get_hint(challenge_id):
         # Check if user already completed the challenge
         completed = Submission.query.filter_by(
             user_id=user_id,
-            challenge_id=challenge_id,
+            challenge_id=challenge.id,
             is_correct=True
         ).first()
         
@@ -646,15 +650,24 @@ def validate_answer(challenge, submitted_answer, question_key=None):
         # Default: exact match
         return correct == submitted
 
-@challenges_bp.route('/<int:challenge_id>/recent-solves', methods=['GET'])
-def get_recent_solves(challenge_id):
+@challenges_bp.route('/<challenge_identifier>/recent-solves', methods=['GET'])
+def get_recent_solves(challenge_identifier):
     """Get recent successful solves for a challenge"""
     try:
+        # Try to find by slug first, then by ID
+        if challenge_identifier.isdigit():
+            challenge = Challenge.query.filter_by(id=int(challenge_identifier), is_published=True).first()
+        else:
+            challenge = Challenge.query.filter_by(slug=challenge_identifier, is_published=True).first()
+        
+        if not challenge:
+            return jsonify({'error': 'Challenge not found'}), 404
+        
         # Get the 10 most recent successful submissions for this challenge
         recent_submissions = db.session.query(Submission, User).join(
             User, Submission.user_id == User.id
         ).filter(
-            Submission.challenge_id == challenge_id,
+            Submission.challenge_id == challenge.id,
             Submission.is_correct == True
         ).order_by(
             Submission.submitted_at.desc()
@@ -696,10 +709,19 @@ def get_recent_solves(challenge_id):
     except Exception as e:
         return jsonify({'error': 'Failed to fetch recent solves', 'details': str(e)}), 500
 
-@challenges_bp.route('/<int:challenge_id>/leaderboard', methods=['GET'])
-def get_challenge_leaderboard(challenge_id):
+@challenges_bp.route('/<challenge_identifier>/leaderboard', methods=['GET'])
+def get_challenge_leaderboard(challenge_identifier):
     """Get leaderboard and completion timeline for a specific challenge"""
     try:
+        # Try to find by slug first, then by ID
+        if challenge_identifier.isdigit():
+            challenge = Challenge.query.filter_by(id=int(challenge_identifier), is_published=True).first()
+        else:
+            challenge = Challenge.query.filter_by(slug=challenge_identifier, is_published=True).first()
+        
+        if not challenge:
+            return jsonify({'error': 'Challenge not found'}), 404
+        
         # Get all successful submissions for this challenge, ordered by submission time
         submissions_query = db.session.query(
             Submission.user_id,
@@ -710,7 +732,7 @@ def get_challenge_leaderboard(challenge_id):
             Submission.submitted_at,
             Submission.hint_count
         ).join(User, Submission.user_id == User.id).filter(
-            Submission.challenge_id == challenge_id,
+            Submission.challenge_id == challenge.id,
             Submission.is_correct == True
         ).order_by(Submission.submitted_at.asc())
         
@@ -718,8 +740,7 @@ def get_challenge_leaderboard(challenge_id):
         
         # Create progression data for the line graph (points progression per user)
         # Get challenge details to know max possible points
-        challenge = Challenge.query.get(challenge_id)
-        max_points = challenge.points if challenge else 100
+        max_points = challenge.points
         
         # Get all submissions (including partial ones) to show progression
         all_submissions_query = db.session.query(
@@ -730,7 +751,7 @@ def get_challenge_leaderboard(challenge_id):
             Submission.submitted_at,
             Submission.is_correct
         ).join(User, Submission.user_id == User.id).filter(
-            Submission.challenge_id == challenge_id
+            Submission.challenge_id == challenge.id
         ).order_by(Submission.submitted_at.asc())
         
         # Group submissions by user to show their progression
@@ -799,7 +820,7 @@ def get_challenge_leaderboard(challenge_id):
             Submission.submitted_at,
             Submission.hint_count
         ).join(User, Submission.user_id == User.id).filter(
-            Submission.challenge_id == challenge_id,
+            Submission.challenge_id == challenge.id,
             Submission.is_correct == True
         ).order_by(
             Submission.completion_time.asc().nulls_last(),  
