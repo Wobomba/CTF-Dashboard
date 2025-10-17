@@ -742,6 +742,24 @@ def get_challenge_leaderboard(challenge_identifier):
         # Get challenge details to know max possible points
         max_points = challenge.points
         
+        # Get total number of questions in the challenge
+        total_questions = 0
+        if challenge.questions:
+            if isinstance(challenge.questions, list):
+                total_questions = len(challenge.questions)
+            elif isinstance(challenge.questions, str):
+                try:
+                    import json
+                    questions_data = json.loads(challenge.questions)
+                    if isinstance(questions_data, list):
+                        total_questions = len(questions_data)
+                except (json.JSONDecodeError, TypeError):
+                    total_questions = 1  # Fallback for legacy challenges
+            else:
+                total_questions = 1  # Fallback for legacy challenges
+        else:
+            total_questions = 1  # Fallback for legacy challenges
+        
         # Get all submissions (including partial ones) to show progression
         all_submissions_query = db.session.query(
             Submission.user_id,
@@ -859,6 +877,7 @@ def get_challenge_leaderboard(challenge_identifier):
             'timeline': timeline_data,
             'total_completions': len(all_submissions),
             'max_points': max_points,
+            'total_questions': total_questions,
             'total_users': len(user_progressions)
         }), 200
         

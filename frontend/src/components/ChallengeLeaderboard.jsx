@@ -8,6 +8,7 @@ const ChallengeLeaderboard = ({ challengeSlug }) => {
   const [timeline, setTimeline] = useState([])
   const [totalCompletions, setTotalCompletions] = useState(0)
   const [maxPoints, setMaxPoints] = useState(100)
+  const [totalQuestions, setTotalQuestions] = useState(1)
   const [totalUsers, setTotalUsers] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,6 +23,7 @@ const ChallengeLeaderboard = ({ challengeSlug }) => {
         setTimeline(response.data.timeline || [])
         setTotalCompletions(response.data.total_completions || 0)
         setMaxPoints(response.data.max_points || 100)
+        setTotalQuestions(response.data.total_questions || 1)
         setTotalUsers(response.data.total_users || 0)
       } catch (err) {
         setError('Failed to load leaderboard')
@@ -247,10 +249,16 @@ const ChallengeLeaderboard = ({ challengeSlug }) => {
                       fontSize={12}
                       axisLine={false}
                       tickLine={false}
-                      label={{ value: 'Submission Steps', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
+                      label={{ value: 'Questions Progress', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
                       type="number"
                       scale="linear"
-                      domain={['dataMin', 'dataMax']}
+                      domain={[0, totalQuestions]}
+                      ticks={totalQuestions <= 10 ? Array.from({length: totalQuestions + 1}, (_, i) => i) : [0, Math.ceil(totalQuestions/2), totalQuestions]}
+                      tickFormatter={(value) => {
+                        if (value === 0) return 'Start'
+                        if (value === totalQuestions) return 'Complete'
+                        return `Q${value}`
+                      }}
                     />
                     <YAxis 
                       stroke="#9CA3AF"
@@ -260,6 +268,8 @@ const ChallengeLeaderboard = ({ challengeSlug }) => {
                       label={{ value: 'Points', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
                       domain={[0, maxPoints]}
                       type="number"
+                      ticks={Array.from({length: 6}, (_, i) => Math.round((maxPoints / 5) * i))}
+                      tickFormatter={(value) => `${value}`}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     {userIds.map((userId, index) => (
@@ -296,11 +306,11 @@ const ChallengeLeaderboard = ({ challengeSlug }) => {
                 
                 <div className="text-center">
                   <p className="text-gray-400 text-sm">
-                    Points progression showing how each user accumulated points from 0 to {maxPoints} through their submission attempts
+                    Points progression showing how each user accumulated points from 0 to {maxPoints} across {totalQuestions} question{totalQuestions > 1 ? 's' : ''}
                   </p>
                   {chartData.length > 0 && (
                     <p className="text-gray-500 text-xs mt-1">
-                      {chartData.length} step{chartData.length > 1 ? 's' : ''} from {userIds.length} user{userIds.length > 1 ? 's' : ''}
+                      {userIds.length} user{userIds.length > 1 ? 's' : ''} • {totalQuestions} question{totalQuestions > 1 ? 's' : ''} • {maxPoints} max points
                     </p>
                   )}
                 </div>
