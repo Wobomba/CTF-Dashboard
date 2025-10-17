@@ -167,9 +167,9 @@ def start_challenge(challenge_identifier):
         db.session.rollback()
         return jsonify({'error': 'Failed to start challenge', 'details': str(e)}), 500
 
-@challenges_bp.route('/<int:challenge_id>/submit', methods=['POST'])
+@challenges_bp.route('/<challenge_identifier>/submit', methods=['POST'])
 @jwt_required()
-def submit_answer(challenge_id):
+def submit_answer(challenge_identifier):
     """Submit an answer for a challenge"""
     try:
         user_id = int(get_jwt_identity())
@@ -178,21 +178,25 @@ def submit_answer(challenge_id):
         if not data.get('answer'):
             return jsonify({'error': 'Answer is required'}), 400
         
-        # Verify challenge exists and is published
-        challenge = Challenge.query.filter_by(id=challenge_id, is_published=True).first()
+        # Try to find by slug first, then by ID
+        if challenge_identifier.isdigit():
+            challenge = Challenge.query.filter_by(id=int(challenge_identifier), is_published=True).first()
+        else:
+            challenge = Challenge.query.filter_by(slug=challenge_identifier, is_published=True).first()
+        
         if not challenge:
             return jsonify({'error': 'Challenge not found'}), 404
         
         # Get or create progress record
         progress = UserProgress.query.filter_by(
             user_id=user_id,
-            challenge_id=challenge_id
+            challenge_id=challenge.id
         ).first()
         
         if not progress:
             progress = UserProgress(
                 user_id=user_id,
-                challenge_id=challenge_id,
+                challenge_id=challenge.id,
                 status='in_progress',
                 started_at=datetime.utcnow(),
                 attempts_count=0,
@@ -211,7 +215,7 @@ def submit_answer(challenge_id):
         # Check if user already completed this challenge all questions correct
         existing_correct = Submission.query.filter_by(
             user_id=user_id,
-            challenge_id=challenge_id,
+            challenge_id=challenge.id,
             is_correct=True
         ).first()
 
@@ -244,7 +248,7 @@ def submit_answer(challenge_id):
         question_key = data.get('question_key')
         
         try:
-            print(f"DEBUG: Challenge ID: {challenge_id}")
+            print(f"DEBUG: Challenge ID: {challenge.id}")
             print(f"DEBUG: Challenge questions: {challenge.questions}")
             print(f"DEBUG: Submitted answer: {submitted_answer}")
             print(f"DEBUG: Question key: {question_key}")
@@ -298,7 +302,7 @@ def submit_answer(challenge_id):
                     # Fallback create new submission
                     submission = Submission(
                         user_id=user_id,
-                        challenge_id=challenge_id,
+                        challenge_id=challenge.id,
                         submitted_answer=submitted_answer,
                         is_correct=is_correct,
                         points_awarded=points_awarded,
@@ -313,7 +317,7 @@ def submit_answer(challenge_id):
                 # Fallback: create new submission
                 submission = Submission(
                     user_id=user_id,
-                    challenge_id=challenge_id,
+                    challenge_id=challenge.id,
                     submitted_answer=submitted_answer,
                     is_correct=is_correct,
                     points_awarded=points_awarded,
@@ -328,7 +332,7 @@ def submit_answer(challenge_id):
             print(f"DEBUG: Creating submission with submitted_answer: {submitted_answer}")
             submission = Submission(
                 user_id=user_id,
-                challenge_id=challenge_id,
+                challenge_id=challenge.id,
                 submitted_answer=submitted_answer,
                 is_correct=is_correct,
                 points_awarded=points_awarded,
