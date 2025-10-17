@@ -37,11 +37,51 @@ const ChallengeDetail = () => {
   const [visibleQuestionHints, setVisibleQuestionHints] = useState({})
   const [submission, setSubmission] = useState(null)
   const [recentSolves, setRecentSolves] = useState([])
+  const [draftSaved, setDraftSaved] = useState(false)
 
   useEffect(() => {
     fetchChallenge()
     fetchRecentSolves()
   }, [slug])
+
+  // Load draft answers from localStorage when component mounts
+  useEffect(() => {
+    if (slug && user) {
+      const draftKey = `challenge_draft_${user.id}_${slug}`
+      const savedDrafts = localStorage.getItem(draftKey)
+      if (savedDrafts) {
+        try {
+          const draftAnswers = JSON.parse(savedDrafts)
+          setAnswers(prev => ({ ...prev, ...draftAnswers }))
+        } catch (error) {
+          console.error('Failed to parse saved draft answers:', error)
+        }
+      }
+    }
+  }, [slug, user])
+
+  // Save draft answers to localStorage whenever answers change
+  useEffect(() => {
+    if (slug && user && Object.keys(answers).length > 0) {
+      const draftKey = `challenge_draft_${user.id}_${slug}`
+      localStorage.setItem(draftKey, JSON.stringify(answers))
+      setDraftSaved(true)
+      // Hide the "draft saved" indicator after 2 seconds
+      setTimeout(() => setDraftSaved(false), 2000)
+    }
+  }, [answers, slug, user])
+
+  // Cleanup localStorage when component unmounts (optional - keep drafts for next visit)
+  useEffect(() => {
+    return () => {
+      // Note: We're keeping the drafts in localStorage so users can return to them
+      // If you want to clear on unmount, uncomment the following:
+      // if (slug && user) {
+      //   const draftKey = `challenge_draft_${user.id}_${slug}`
+      //   localStorage.removeItem(draftKey)
+      // }
+    }
+  }, [slug, user])
 
   const fetchChallenge = async () => {
     try {
@@ -119,6 +159,18 @@ const ChallengeDetail = () => {
     }))
   }
 
+  // Utility function to clear all draft answers for this user
+  const clearAllDrafts = () => {
+    if (user) {
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.startsWith(`challenge_draft_${user.id}_`)) {
+          localStorage.removeItem(key)
+        }
+      })
+    }
+  }
+
   const toggleQuestionHint = (questionId) => {
     setVisibleQuestionHints(prev => ({
       ...prev,
@@ -154,6 +206,26 @@ const ChallengeDetail = () => {
       
       if (response.data.is_correct) {
         toast.success('Correct! Well done!')
+        
+        // Clear the submitted answer from localStorage draft
+        if (user && slug) {
+          const draftKey = `challenge_draft_${user.id}_${slug}`
+          const savedDrafts = localStorage.getItem(draftKey)
+          if (savedDrafts) {
+            try {
+              const draftAnswers = JSON.parse(savedDrafts)
+              delete draftAnswers[questionKey]
+              if (Object.keys(draftAnswers).length > 0) {
+                localStorage.setItem(draftKey, JSON.stringify(draftAnswers))
+              } else {
+                localStorage.removeItem(draftKey)
+              }
+            } catch (error) {
+              console.error('Failed to update localStorage after submission:', error)
+            }
+          }
+        }
+        
         // Check if all questions are now correct
         const questions = getQuestions()
         const allCorrect = questions.every(q => 
@@ -167,6 +239,12 @@ const ChallengeDetail = () => {
             user_submission: response.data.submission,
             solves: prev.solves + 1
           }))
+          
+          // Clear all draft answers when challenge is fully completed
+          if (user && slug) {
+            const draftKey = `challenge_draft_${user.id}_${slug}`
+            localStorage.removeItem(draftKey)
+          }
         }
       } else {
         toast.error('Incorrect answer. Try again!')
@@ -349,7 +427,15 @@ const ChallengeDetail = () => {
             <div className="space-y-6">
               {/* Challenge Title */}
               <div className="bg-gray-800 rounded-lg p-6">
-                <h1 className="text-2xl font-bold text-white mb-2">{challenge.title}</h1>
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-2xl font-bold text-white">{challenge.title}</h1>
+                  {draftSaved && (
+                    <div className="flex items-center text-green-400 text-sm">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Draft saved
+                    </div>
+                  )}
+                </div>
                 <p className="text-gray-400 text-sm mb-4">{challenge.scenario || challenge.description}</p>
                 
                 {/* Challenge Stats */}
